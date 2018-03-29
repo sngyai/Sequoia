@@ -70,7 +70,7 @@ def check_ma(stock, data, end_date=None, ma_days=250):
         return False
 
 
-# 量比大于2.0
+# 量比大于3.0
 def check_volume(stock, data, end_date=None, threshold=60):
     total_vol = 0
     data = data.loc[:end_date]
@@ -88,8 +88,8 @@ def check_volume(stock, data, end_date=None, threshold=60):
         total_vol += float(row['volume'])
 
     mean_vol = total_vol / threshold
-    vol_ratio= last_vol / mean_vol
-    if vol_ratio > 1.5:
+    vol_ratio = last_vol / mean_vol
+    if vol_ratio >= 3:
         print("{0}：量比：{1}\n".format(stock, vol_ratio))
         return True
     else:

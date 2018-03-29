@@ -17,9 +17,30 @@ import strategy.enter as enter
 # )
 #
 # average_true_range = average_true_range_list[-1]
+#
+# stock = "000732"
+# data = utils.read_data(stock)
+#
+# rolling_window = 21
+# moving_average = 20
+#
+# average_true_range = ATR(
+#         data.high.values[-rolling_window:],
+#         data.low.values[-rolling_window:],
+#         data.close.values[-rolling_window:],
+#         timeperiod=moving_average
+#     )
+# print(data['high'].values)
+#
+# print(average_true_range)
 
-stock = "601600"
-data = utils.read_data(stock)
+# print(atr_list)
+# atr = atr_list[-1]
+# print(atr)
+# print(enter.check_volume(stock, data, end_date="2018-01-02"))
+import notify
 
-print(enter.check_ma(stock, data, end_date="2017-09-26"))
-
+results = ['300188', '600271']
+msg = '\n'.join("*代码：%s" % ''.join(x) for x in results)
+notify.notify(msg)
+print(results)

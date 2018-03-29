@@ -25,7 +25,7 @@ def append(stock):
             print("股票：{} 没有新的数据，略过。。。".format(stock))
         else:
             # print("股票：{} 追加数据".format(stock))
-            appender = appender.sort_index()
+            appender = appender.drop(start_date).sort_index()
             appender.to_hdf(DATA_DIR + "/" + stock + '.h5', 'data', append=True, format='table')
 
 

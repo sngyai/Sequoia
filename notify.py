@@ -4,7 +4,7 @@ import json
 
 
 def notify(msg=None):
-    conn = http.client.HTTPSConnection("sngyai.com:5280")
+    conn = http.client.HTTPConnection("sngyai.com:5280")
 
     if msg is None or not msg:
         msg = "今日没有符合条件的股票"

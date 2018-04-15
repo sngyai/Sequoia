@@ -1,7 +1,8 @@
-# -*- coding: UTF-8 -*-
+# -*- encoding: UTF-8 -*-
 
 import talib as tl
 import pandas as pd
+import notify
 
 
 # TODO 真实波动幅度（ATR）放大
@@ -50,17 +51,18 @@ def check_breakthrough(stock, data, end_date=None, threshold=60):
 
 # 均线突破
 def check_ma(stock, data, end_date=None, ma_days=250):
+    if data.size < ma_days:
+        print("{0}:样本小于{1}天...\n".format(stock, ma_days))
+        return False
+
+    data['ma'] = pd.Series(tl.MA(data['close'].values, ma_days), index=data.index.values)
+
     begin_date = data.iloc[0].name
     if end_date is not None:
         if end_date < begin_date:  # 该股票在end_date时还未上市
             print("{}在{}时还未上市".format(stock, end_date))
             return False
     data = data.loc[:end_date]
-    if data.size < ma_days:
-        print("{0}:样本小于{1}天...\n".format(stock, ma_days))
-        return False
-
-    data['ma'] = pd.Series(tl.MA(data['close'].values, ma_days), index=data.index.values)
 
     last_close = data.iloc[-1]['close']
     last_ma = data.iloc[-1]['ma']
@@ -90,7 +92,9 @@ def check_volume(stock, data, end_date=None, threshold=60):
     mean_vol = total_vol / threshold
     vol_ratio = last_vol / mean_vol
     if vol_ratio >= 3:
-        print("{0}：量比：{1}\n".format(stock, vol_ratio))
+        msg = "*代码: {0} 量比：{1}\n".format(stock, vol_ratio)
+        print(msg)
+        notify.notify(msg)
         return True
     else:
         return False

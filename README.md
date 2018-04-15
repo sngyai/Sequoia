@@ -4,5 +4,5 @@
  * Python2.7或3.5以上
  * Python Package: 
  ```
- pip install lxml numpy tushare pandas TA-Lib threadpool xlrd
+ pip install lxml requests bs4 numpy tushare pandas TA-Lib threadpool xlrd tables 
  ```

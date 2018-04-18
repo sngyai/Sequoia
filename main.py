@@ -7,15 +7,17 @@ import utils
 
 
 def strategy(end_date=None):
-    def end_date_filter(stock):
-        data = utils.read_data(stock)
+    def end_date_filter(code_name):
+        stock = code_name[0]
+        name = code_name[1]
+        data = utils.read_data(stock, name)
         if data is None:
             return False
         return \
-            low_atr.check_low_increase(stock, data)
-            # enter.check_ma(stock, data, end_date=end_date) \
-            # and enter.check_max_price(stock, data, end_date=end_date) \
-            # and enter.check_volume(stock, data, end_date=end_date)
+            enter.check_ma(stock, data, end_date=end_date) \
+            and enter.check_max_price(stock, data, end_date=end_date) \
+            and enter.check_volume(code_name, data, end_date=end_date)
+    # low_atr.check_low_increase(stock, data)
     return end_date_filter
 
 

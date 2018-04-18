@@ -20,7 +20,8 @@ import strategy.enter as enter
 #
 # average_true_range = average_true_range_list[-1]
 #
-stock = "600436"
+stock = "000977"
+name = "浪潮信息"
 data = utils.read_data(stock)
 # print(data)
 result = enter.check_ma(stock, data)

@@ -13,9 +13,9 @@ def strategy(end_date=None):
             return False
         return \
             low_atr.check_low_increase(stock, data)
-            # enter.check_ma(stock, data, end_date=end_date) \
-            # and enter.check_max_price(stock, data, end_date=end_date) \
-            # and enter.check_volume(stock, data, end_date=end_date)
+            enter.check_ma(stock, data, end_date=end_date) \
+            and enter.check_max_price(stock, data, end_date=end_date) \
+            and enter.check_volume(stock, data, end_date=end_date)
     return end_date_filter
 
 

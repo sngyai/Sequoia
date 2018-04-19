@@ -21,7 +21,4 @@ def notify(msg=None):
 
     conn.request("POST", "/api/send_message", payload, headers)
 
-    res = conn.getresponse()
-    data = res.read()
-
-    print(data.decode("utf-8"))
+    conn.getresponse()

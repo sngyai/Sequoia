@@ -3,6 +3,7 @@
 import talib as tl
 import pandas as pd
 import notify
+import logging
 
 
 # TODO 真实波动幅度（ATR）放大
@@ -12,7 +13,7 @@ def check_max_price(stock, data, end_date=None, threshold=60):
     data = data.loc[:end_date]
     data = data.tail(n=threshold)
     if data.size < threshold:
-        print("{0}:样本小于{1}天...\n".format(stock, threshold))
+        logging.info("{0}:样本小于{1}天...\n".format(stock, threshold))
         return False
     for index, row in data.iterrows():
         if row['close'] > max_price:
@@ -32,7 +33,7 @@ def check_breakthrough(stock, data, end_date=None, threshold=60):
     data = data.loc[:end_date]
     data = data.tail(n=threshold+1)
     if data.size < threshold + 1:
-        print("{0}:样本小于{1}天...\n".format(stock, threshold))
+        logging.info("{0}:样本小于{1}天...\n".format(stock, threshold))
         return False
 
     # 最后一天收市价
@@ -52,7 +53,7 @@ def check_breakthrough(stock, data, end_date=None, threshold=60):
 # 均线突破
 def check_ma(stock, data, end_date=None, ma_days=250):
     if data.size < ma_days:
-        print("{0}:样本小于{1}天...\n".format(stock, ma_days))
+        logging.info("{0}:样本小于{1}天...\n".format(stock, ma_days))
         return False
 
     data['ma'] = pd.Series(tl.MA(data['close'].values, ma_days), index=data.index.values)
@@ -60,7 +61,7 @@ def check_ma(stock, data, end_date=None, ma_days=250):
     begin_date = data.iloc[0].name
     if end_date is not None:
         if end_date < begin_date:  # 该股票在end_date时还未上市
-            print("{}在{}时还未上市".format(stock, end_date))
+            logging.info("{}在{}时还未上市".format(stock, end_date))
             return False
     data = data.loc[:end_date]
 
@@ -80,7 +81,7 @@ def check_volume(code_name, data, end_date=None, threshold=60):
     data = data.loc[:end_date]
     data = data.tail(n=threshold+1)
     if data.size < threshold + 1:
-        print("{0}:样本小于{1}天...\n".format(stock, threshold))
+        logging.info("{0}:样本小于{1}天...\n".format(stock, threshold))
         return False
 
     # 最后一天收盘价
@@ -98,7 +99,7 @@ def check_volume(code_name, data, end_date=None, threshold=60):
     if vol_ratio >= 3:
 
         msg = "*{0}({1}) 量比：{2:.2f}\n\t收盘价：{3}\n".format(name, stock, vol_ratio, last_close)
-        print(msg)
+        logging.info(msg)
         notify.notify(msg)
         return True
     else:

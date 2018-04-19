@@ -4,6 +4,7 @@ import process
 import strategy.enter as enter
 import strategy.low_atr as low_atr
 import utils
+import logging
 
 
 def strategy(end_date=None):
@@ -21,14 +22,18 @@ def strategy(end_date=None):
     return end_date_filter
 
 
-process.run()
-print("数据更新完毕！")
-stocks = utils.get_stocks()
+if utils.is_weekday():
+    logging.basicConfig(format='%(asctime)s %(message)s', filename='sequoia.log',level=logging.DEBUG)
+    logging.info("*********************************************************************")
+    if utils.need_update_data():
+        logging.info("更新数据")
+        process.run()
+    stocks = utils.get_stocks()
 
-m_filter = strategy(end_date=None)
+    m_filter = strategy(end_date=None)
 
-results = list(filter(m_filter, stocks))
-print(results)
-
+    results = list(filter(m_filter, stocks))
+    logging.info('选股结果：{0}'.format(results))
+    logging.info("*********************************************************************")
 
 

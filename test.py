@@ -5,6 +5,7 @@ from talib import ATR
 import strategy.enter as enter
 import strategy.low_atr as low_atr
 import strategy.enter as enter
+import logging
 
 # data = utils.load("000012.h5")
 #
@@ -25,7 +26,7 @@ name = "浪潮信息"
 data = utils.read_data(stock)
 # print(data)
 result = enter.check_ma(stock, data)
-print("low atr check {0}'s result: {1}".format(stock, result))
+logging.info("low atr check {0}'s result: {1}".format(stock, result))
 #
 # rolling_window = 21
 # moving_average = 20

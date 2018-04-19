@@ -1,10 +1,13 @@
 # -*- coding: UTF-8 -*-
+import datetime
 
 import xlrd
 import pandas as pd
 import os
+import time
 
 DATA_DIR = 'data'
+ONE_HOUR_SECONDS = 60 * 60
 
 
 # 获取股票代码列表
@@ -28,6 +31,7 @@ def get_stocks(config=None):
         return stocks
 
 
+# 读取本地数据文件
 def read_data(stock, name):
     file_name = stock + '-' + name + '.h5'
     try:
@@ -35,3 +39,16 @@ def read_data(stock, name):
     except FileNotFoundError:
         return
 
+
+# 是否需要更新数据
+def need_update_data():
+    filename = "data/000001-平安银行.h5"
+    last_modified = os.stat(filename).st_mtime
+    now = time.time()
+    time_diff = now - last_modified
+    return time_diff > ONE_HOUR_SECONDS
+
+
+# 是否是工作日
+def is_weekday():
+    return datetime.datetime.today().weekday() < 5

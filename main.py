@@ -6,6 +6,8 @@ import strategy.low_atr as low_atr
 import utils
 import logging
 
+logging.basicConfig(format='%(asctime)s %(message)s', filename='sequoia.log', level=logging.DEBUG)
+
 
 def strategy(end_date=None):
     def end_date_filter(code_name):
@@ -23,7 +25,6 @@ def strategy(end_date=None):
 
 
 if utils.is_weekday():
-    logging.basicConfig(format='%(asctime)s %(message)s', filename='sequoia.log',level=logging.DEBUG)
     logging.info("*********************************************************************")
     if utils.need_update_data():
         logging.info("更新数据")

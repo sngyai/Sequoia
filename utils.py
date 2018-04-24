@@ -42,11 +42,14 @@ def read_data(stock, name):
 
 # 是否需要更新数据
 def need_update_data():
-    filename = "data/000001-平安银行.h5"
-    last_modified = os.stat(filename).st_mtime
-    now = time.time()
-    time_diff = now - last_modified
-    return time_diff > ONE_HOUR_SECONDS
+    try:
+        filename = "data/000001-平安银行.h5"
+        last_modified = os.stat(filename).st_mtime
+        now = time.time()
+        time_diff = now - last_modified
+        return time_diff > ONE_HOUR_SECONDS
+    except FileNotFoundError:
+        return True
 
 
 # 是否是工作日

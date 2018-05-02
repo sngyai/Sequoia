@@ -5,9 +5,12 @@ import strategy.enter as enter
 import strategy.low_atr as low_atr
 import utils
 import logging
+import schedule
+import time
+
 
 logging.basicConfig(format='%(asctime)s %(message)s', filename='sequoia.log', level=logging.DEBUG)
-
+EXEC_TIME="15:05"
 
 def strategy(end_date=None):
     def end_date_filter(code_name):
@@ -24,17 +27,23 @@ def strategy(end_date=None):
     return end_date_filter
 
 
-if utils.is_weekday():
-    logging.info("*********************************************************************")
-    if utils.need_update_data():
-        logging.info("更新数据")
-        process.run()
-    stocks = utils.get_stocks()
+def job():
+    if utils.is_weekday():
+        logging.info("*********************************************************************")
+        if utils.need_update_data():
+            logging.info("更新数据")
+            process.run()
+        stocks = utils.get_stocks()
 
-    m_filter = strategy(end_date=None)
+        m_filter = strategy(end_date=None)
 
-    results = list(filter(m_filter, stocks))
-    logging.info('选股结果：{0}'.format(results))
-    logging.info("*********************************************************************")
+        results = list(filter(m_filter, stocks))
+        logging.info('选股结果：{0}'.format(results))
+        logging.info("*********************************************************************")
 
 
+schedule.every().day.at(EXEC_TIME).do(job)
+
+while True:
+    schedule.run_pending()
+    time.sleep(1)

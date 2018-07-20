@@ -12,6 +12,7 @@ import time
 logging.basicConfig(format='%(asctime)s %(message)s', filename='sequoia.log', level=logging.DEBUG)
 EXEC_TIME="15:05"
 
+
 def strategy(end_date=None):
     def end_date_filter(code_name):
         stock = code_name[0]

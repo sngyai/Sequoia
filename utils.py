@@ -1,5 +1,6 @@
 # -*- coding: UTF-8 -*-
 import datetime
+from pandas.tseries.offsets import *
 
 import xlrd
 import pandas as pd
@@ -32,7 +33,9 @@ def get_stocks(config=None):
 
 
 # 读取本地数据文件
-def read_data(stock, name):
+def read_data(code_name):
+    stock = code_name[0]
+    name = code_name[1]
     file_name = stock + '-' + name + '.h5'
     try:
         return pd.read_hdf(DATA_DIR + "/" + file_name)
@@ -43,11 +46,15 @@ def read_data(stock, name):
 # 是否需要更新数据
 def need_update_data():
     try:
-        filename = "data/000001-平安银行.h5"
-        last_modified = os.stat(filename).st_mtime
-        now = time.time()
-        time_diff = now - last_modified
-        return time_diff > ONE_HOUR_SECONDS
+        code_name = ('000001', '平安银行')
+        data = read_data(code_name)
+        if data.empty:
+            return True
+        else:
+            start_time = next_weekday(data.iloc[-1].date)
+            current_time = datetime.datetime.now()
+            if start_time > current_time:
+                return False
     except FileNotFoundError:
         return True
 
@@ -55,3 +62,7 @@ def need_update_data():
 # 是否是工作日
 def is_weekday():
     return datetime.datetime.today().weekday() < 5
+
+
+def next_weekday(date):
+    return pd.to_datetime(date) + BDay()

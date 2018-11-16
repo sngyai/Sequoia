@@ -2,32 +2,11 @@
 
 import talib as tl
 import pandas as pd
-import notify
 import logging
 
 
 # TODO 真实波动幅度（ATR）放大
-# 最后一个交易日收市价为指定区间内最高价
-def check_max_price(stock, data, end_date=None, threshold=60):
-    max_price = 0
-    data = data.loc[:end_date]
-    data = data.tail(n=threshold)
-    if data.size < threshold:
-        logging.info("{0}:样本小于{1}天...\n".format(stock, threshold))
-        return False
-    for index, row in data.iterrows():
-        if row['close'] > max_price:
-            max_price = float(row['close'])
-
-    last_close = data.iloc[-1]['close']
-
-    if last_close >= max_price:
-        return True
-
-    return False
-
-
-# 最后一个交易日收市价突破指定区间内最高价
+# 最后一个交易日收市价从下向上突破指定区间内最高价
 def check_breakthrough(stock, data, end_date=None, threshold=60):
     max_price = 0
     data = data.loc[:end_date]
@@ -50,15 +29,16 @@ def check_breakthrough(stock, data, end_date=None, threshold=60):
         return False
 
 
-# 均线突破
+# 收盘价高于N日均线
 def check_ma(stock, data, end_date=None, ma_days=250):
     if data.size < ma_days:
         logging.info("{0}:样本小于{1}天...\n".format(stock, ma_days))
         return False
 
-    data['ma'] = pd.Series(tl.MA(data['close'].values, ma_days), index=data.index.values)
+    ma_tag = 'ma' + str(ma_days)
+    data[ma_tag] = pd.Series(tl.MA(data['close'].values, ma_days), index=data.index.values)
 
-    begin_date = data.iloc[0].name
+    begin_date = data.iloc[0].date
     if end_date is not None:
         if end_date < begin_date:  # 该股票在end_date时还未上市
             logging.info("{}在{}时还未上市".format(stock, end_date))
@@ -66,7 +46,7 @@ def check_ma(stock, data, end_date=None, ma_days=250):
     data = data.loc[:end_date]
 
     last_close = data.iloc[-1]['close']
-    last_ma = data.iloc[-1]['ma']
+    last_ma = data.iloc[-1][ma_tag]
     if last_close > last_ma:
         return True
     else:
@@ -79,7 +59,7 @@ def check_volume(code_name, data, end_date=None, threshold=60):
     name = code_name[1]
     total_vol = 0
     data = data.loc[:end_date]
-    data = data.tail(n=threshold+1)
+    data = data.tail(n=threshold + 1)
     if data.size < threshold + 1:
         logging.info("{0}:样本小于{1}天...\n".format(stock, threshold))
         return False
@@ -100,7 +80,6 @@ def check_volume(code_name, data, end_date=None, threshold=60):
 
         msg = "*{0}({1}) 量比：{2:.2f}\n\t收盘价：{3}\n".format(name, stock, vol_ratio, last_close)
         logging.info(msg)
-        notify.notify(msg)
         return True
     else:
         return False

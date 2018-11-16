@@ -21,12 +21,12 @@ import logging
 #
 # average_true_range = average_true_range_list[-1]
 #
-stock = "000977"
-name = "浪潮信息"
-data = utils.read_data(stock)
-# print(data)
-result = enter.check_ma(stock, data)
-logging.info("low atr check {0}'s result: {1}".format(stock, result))
+# stock = "000977"
+# name = "浪潮信息"
+# data = utils.read_data(stock)
+# # print(data)
+# result = enter.check_ma(stock, data)
+# logging.info("low atr check {0}'s result: {1}".format(stock, result))
 #
 # rolling_window = 21
 # moving_average = 20
@@ -56,3 +56,8 @@ logging.info("low atr check {0}'s result: {1}".format(stock, result))
 #
 # data = ts.get_stock_basics()
 # print(data)
+
+import db
+
+t_shelve = db.ShelvePersistence()
+t_shelve.positions()

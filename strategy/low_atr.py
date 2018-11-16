@@ -5,13 +5,13 @@ import logging
 
 
 # 低ATR成长策略
-def check_low_increase(stock, data, end_date=None, ma_short=30, ma_long=60, threshold=40):
+def check_low_increase(stock, name, data, end_date=None, ma_short=30, ma_long=250, threshold=140):
     if data.size < ma_long:
         logging.info("{0}:样本小于{1}天...\n".format(stock, ma_long))
         return False
 
-    data['ma_short'] = pd.Series(tl.MA(data['close'].values, ma_short), index=data.index.values)
-    data['ma_long'] = pd.Series(tl.MA(data['close'].values, ma_long), index=data.index.values)
+    # data['ma_short'] = pd.Series(tl.MA(data['close'].values, ma_short), index=data.index.values)
+    # data['ma_long'] = pd.Series(tl.MA(data['close'].values, ma_long), index=data.index.values)
 
     data = data.loc[:end_date]
     data = data.tail(n=threshold)
@@ -22,12 +22,12 @@ def check_low_increase(stock, data, end_date=None, ma_short=30, ma_long=60, thre
         return False
 
     for index, row in data.iterrows():
-        p_change = float(row['p_change'])
+        p_change = float((row['close'] - row['open']) / row['open'])
 
-        if p_change < -7.5:
-            return False
-        if row['ma_short'] < row['ma_long']:
-            return False
+        # if p_change < -7.5:
+        #     return False
+        # if row['ma_short'] < row['ma_long']:
+        #     return False
 
         if p_change > 0:
             inc_days = inc_days + 1
@@ -38,7 +38,7 @@ def check_low_increase(stock, data, end_date=None, ma_short=30, ma_long=60, thre
     end = data.iloc[-1]['close']
     ratio = (end - begin) / begin
 
-    if ratio > 0.3:
-        logging.info("代码：{0}  初始价:{1}, 当前价:{2}, 涨跌比率:{3}       上涨天数:{4}， 下跌天数:{5}".format(stock, begin, end, ratio, inc_days, dec_days))
+    if ratio > 0.2:
+        logging.info("股票：{0}（{1}）  初始价:{2}, 当前价:{3}, 涨跌比率:{4}       上涨天数:{5}， 下跌天数:{6}".format(name, stock, begin, end, ratio, inc_days, dec_days))
 
     return True

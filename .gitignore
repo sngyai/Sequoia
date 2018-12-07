@@ -1,3 +1,4 @@
-/data/
+/data/*.h5
+/storage/*
 /.idea/
 /__pycache__/

@@ -19,7 +19,6 @@ def check_enter(stock, data, end_date=None, threshold=20):
     data = data.loc[:end_date]
     data = data.tail(n=threshold)
     if data.size < threshold:
-        logging.info("{0}:样本小于{1}天...\n".format(stock, threshold))
         return False
     for index, row in data.iterrows():
         if row['close'] > max_price:
@@ -57,10 +56,10 @@ def check_exit(code_name, data, end_date=None, threshold=10):
 def check_stop(stock, data, position_data, end_date=None):
     last_close = data.iloc[-1]['close']
     positions = position_data['positions']
-    cost = positions['cost']
+    cost = position_data['cost']
     current_cap = 0
     for (position_price, position_size) in positions:
-        current_cap += position_size * last_close
+        current_cap += position_size * last_close * 100
 
     if cost - BALANCE / 50 > current_cap:
         return True

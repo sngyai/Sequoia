@@ -27,11 +27,9 @@ def check_enter(end_date=None):
     def end_date_filter(code_name):
         stock = code_name[0]
         data = utils.read_data(code_name)
-        result = turtle_trade.check_enter(stock, data, end_date=end_date) \
-            and enter.check_ma(stock, data, end_date=end_date) \
+        result = enter.check_ma(stock, data, end_date=end_date) \
+            and turtle_trade.check_enter(stock, data, end_date=end_date) \
             and enter.check_volume(stock, data, end_date=end_date)
-        # and enter.check_ma(stock, data, end_date=end_date) \
-        # and turtle_trade.check_enter(stock, data, end_date=end_date) \
         # and enter.check_volume(code_name, data, end_date=end_date)
         if result:
             message = turtle_trade.calculate(code_name, data)
@@ -53,11 +51,11 @@ def check_exit():
         code_name = file[key]['code_name']
         data = utils.read_data(code_name)
         if turtle_trade.check_exit(code_name, data):
-            # notify.notify("{0} 达到退出条件".format(code_name))
+            notify.notify("{0} 达到退出条件".format(code_name))
             logging.info("{0} 达到退出条件".format(code_name))
             del file[key]
         elif turtle_trade.check_stop(code_name, data, file[key]):
-            # notify.notify("{0} 达到止损条件".format(code_name))
+            notify.notify("{0} 达到止损条件".format(code_name))
             logging.info("{0} 达到止损条件".format(code_name))
             del file[key]
 

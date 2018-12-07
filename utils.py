@@ -37,9 +37,9 @@ def read_data(code_name):
     stock = code_name[0]
     name = code_name[1]
     file_name = stock + '-' + name + '.h5'
-    try:
+    if os.path.exists(DATA_DIR + "/" + file_name):
         return pd.read_hdf(DATA_DIR + "/" + file_name)
-    except FileNotFoundError:
+    else:
         return
 
 
@@ -48,14 +48,15 @@ def need_update_data():
     try:
         code_name = ('000001', '平安银行')
         data = read_data(code_name)
-        if data.empty:
+        if data is None:
             return True
         else:
             start_time = next_weekday(data.iloc[-1].date)
             current_time = datetime.datetime.now()
             if start_time > current_time:
                 return False
-    except FileNotFoundError:
+            return True
+    except IOError:
         return True
 
 

@@ -1,6 +1,7 @@
 # -*- encoding: UTF-8 -*-
 
 import shelve
+import settings
 
 
 class ShelvePersistence(object):
@@ -8,11 +9,11 @@ class ShelvePersistence(object):
     Shelve为DBM和Pickle的结合，以键值对的方式把复杂对象序列化到文件持久化或者缓存持久化
     """
     def open(self):
-        return shelve.open('storage/Positions')
+        return shelve.open(settings.DB_DIR + "/Positions")
 
     def load(self, key):
         try:
-            shelve_file = shelve.open('storage/Positions')
+            shelve_file = shelve.open(settings.DB_DIR + "/Positions")
             if key in shelve_file:
                 result = shelve_file[key]
             else:
@@ -30,7 +31,7 @@ class ShelvePersistence(object):
         new_position = (last_close, position_size)
         new_cost = position_size * 100 * last_close
 
-        shelve_file = shelve.open('storage/Positions')
+        shelve_file = shelve.open(settings.DB_DIR + "/Positions")
         old_data = self.load(stock)
 
         if old_data is None:
@@ -49,7 +50,7 @@ class ShelvePersistence(object):
                 return False
 
     def positions(self):
-        shelve_file = shelve.open('storage/Positions')
+        shelve_file = shelve.open(settings.DB_DIR + "/Positions")
         for key in shelve_file:
             print(key, shelve_file[key])
 

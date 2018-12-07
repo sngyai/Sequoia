@@ -5,9 +5,8 @@ from pandas.tseries.offsets import *
 import xlrd
 import pandas as pd
 import os
-import time
+import settings
 
-DATA_DIR = 'data'
 ONE_HOUR_SECONDS = 60 * 60
 
 
@@ -21,7 +20,7 @@ def get_stocks(config=None):
         names = table.col_values(1)[1:rows_count-1]
         return list(zip(codes, names))
     else:
-        data_files = os.listdir(DATA_DIR)
+        data_files = os.listdir(settings.DATA_DIR)
         stocks = []
         for file in data_files:
             code_name = file.split(".")[0]
@@ -37,8 +36,8 @@ def read_data(code_name):
     stock = code_name[0]
     name = code_name[1]
     file_name = stock + '-' + name + '.h5'
-    if os.path.exists(DATA_DIR + "/" + file_name):
-        return pd.read_hdf(DATA_DIR + "/" + file_name)
+    if os.path.exists(settings.DATA_DIR + "/" + file_name):
+        return pd.read_hdf(settings.DATA_DIR + "/" + file_name)
     else:
         return
 
@@ -67,3 +66,12 @@ def is_weekday():
 
 def next_weekday(date):
     return pd.to_datetime(date) + BDay()
+
+
+def prepare():
+    dirs = [settings.DATA_DIR, settings.DB_DIR]
+    for dir in dirs:
+        if os.path.exists(dir):
+            return
+        else:
+            os.makedirs(dir)

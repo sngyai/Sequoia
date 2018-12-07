@@ -9,6 +9,7 @@ import db
 
 def process():
     logging.info("************************ process start ***************************************")
+    utils.prepare()
     if utils.need_update_data():
         logging.info("更新数据")
         data_fetcher.run()

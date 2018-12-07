@@ -2,3 +2,4 @@
 /storage/*
 /.idea/
 /__pycache__/
+/.sequoia.log

@@ -3,6 +3,7 @@
 import utils
 import logging
 import work_flow
+import settings
 
 logging.basicConfig(format='%(asctime)s %(message)s', filename='sequoia.log', level=logging.DEBUG)
 
@@ -17,4 +18,5 @@ def job():
         work_flow.process()
 
 
+settings.init()
 work_flow.process()

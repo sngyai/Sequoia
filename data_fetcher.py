@@ -25,7 +25,7 @@ def update_data(code_name):
         current_time = datetime.datetime.now()
         if start_time > current_time:
             return
-        appender = ts.get_k_data(stock, start=start_time.strftime('%Y-%m-%d'), autype='hfq')
+        appender = ts.get_k_data(stock, start=start_time.strftime('%Y-%m-%d'), autype='qfq')
         if appender.empty:
             return
         else:
@@ -34,7 +34,7 @@ def update_data(code_name):
 
 def init_data(code_name):
     stock = code_name[0]
-    data = ts.get_k_data(stock, autype='hfq')
+    data = ts.get_k_data(stock, autype='qfq')
     if data is None or data.empty:
         logging.info("股票："+stock+" 数据下载失败，重试...")
         return

@@ -1,3 +1,5 @@
+# -*- encoding: UTF-8 -*-
+
 import data_fetcher
 import utils
 import strategy.enter as enter
@@ -21,6 +23,7 @@ def process():
     results = list(filter(m_filter, stocks))
 
     logging.info('选股结果：{0}'.format(results))
+    notify.notify('选股结果：{0}'.format(results))
     logging.info("************************ process   end ***************************************")
 
 
@@ -35,7 +38,7 @@ def check_enter(end_date=None):
         if result:
             message = turtle_trade.calculate(code_name, data)
             logging.info("{0} {1}".format(code_name, message))
-            # notify.notify("{0} {1}".format(code_name, message))
+            notify.notify("{0} {1}".format(code_name, message))
         return result
 
     # low_atr.check_low_increase(stock, name, data)

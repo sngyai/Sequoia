@@ -31,6 +31,16 @@ def get_stocks(config=None):
         return stocks
 
 
+def clean_files():
+    for the_file in os.listdir(settings.DATA_DIR):
+        file_path = os.path.join(settings.DATA_DIR, the_file)
+        try:
+            if os.path.isfile(file_path):
+                os.unlink(file_path)
+        except Exception as e:
+            print(e)
+
+
 # 读取本地数据文件
 def read_data(code_name):
     stock = code_name[0]
@@ -72,6 +82,7 @@ def prepare():
     dirs = [settings.DATA_DIR, settings.DB_DIR]
     for dir in dirs:
         if os.path.exists(dir):
+            clean_files()
             return
         else:
             os.makedirs(dir)

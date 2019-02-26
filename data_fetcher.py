@@ -17,19 +17,22 @@ CONFIG_MAIN = 'config/沪深A股200亿.xlsx'
 CONFIG_CYB = 'config/创业板100亿.xlsx'
 
 
-def update_data(code_name):
-    stock = code_name[0]
-    old_data = utils.read_data(code_name)
-    if not old_data.empty:
-        start_time = utils.next_weekday(old_data.iloc[-1].date)
-        current_time = datetime.datetime.now()
-        if start_time > current_time:
-            return
-        appender = ts.get_k_data(stock, start=start_time.strftime('%Y-%m-%d'), autype='qfq')
-        if appender.empty:
-            return
-        else:
-            return appender
+# def update_data(code_name):
+#     stock = code_name[0]
+#     old_data = utils.read_data(code_name)
+#     if not old_data.empty:
+#         start_time = utils.next_weekday(old_data.iloc[-1].date)
+#         current_time = datetime.datetime.now()
+#         if start_time > current_time:
+#             return
+#
+#         df = ts.get_k_data(stock, autype='qfq')
+#         mask = (df['date'] >= start_time.strftime('%Y-%m-%d'))
+#         appender = df.loc[mask]
+#         if appender.empty:
+#             return
+#         else:
+#             return appender
 
 
 def init_data(code_name):
@@ -45,15 +48,11 @@ def init_data(code_name):
 
 
 def run():
-    code_names = utils.get_stocks()
-    append_mode = True
-    update_fun = update_data
-    if code_names == []:   # 第一次下载数据
-        stocks_main = utils.get_stocks(CONFIG_MAIN)
-        stocks_cyb = utils.get_stocks(CONFIG_CYB)
-        code_names = stocks_main + stocks_cyb
-        append_mode = False
-        update_fun = init_data
+    stocks_main = utils.get_stocks(CONFIG_MAIN)
+    stocks_cyb = utils.get_stocks(CONFIG_CYB)
+    code_names = stocks_main + stocks_cyb
+    append_mode = False
+    update_fun = init_data
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
         future_to_stock = {executor.submit(update_fun, stock): stock for stock in code_names}

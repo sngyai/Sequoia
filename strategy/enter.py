@@ -53,7 +53,7 @@ def check_ma(stock, data, end_date=None, ma_days=250):
         return False
 
 
-# 量比大于2.0
+# 量比大于3.0
 def check_volume(code_name, data, end_date=None, threshold=60):
     stock = code_name[0]
     name = code_name[1]
@@ -76,7 +76,7 @@ def check_volume(code_name, data, end_date=None, threshold=60):
 
     mean_vol = total_vol / threshold
     vol_ratio = last_vol / mean_vol
-    if vol_ratio >= 2:
+    if vol_ratio >= 3:
 
         msg = "*{0}({1}) 量比：{2:.2f}\n\t收盘价：{3}\n".format(name, stock, vol_ratio, last_close)
         logging.info(msg)

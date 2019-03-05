@@ -13,8 +13,7 @@ from pandas.tseries.offsets import *
 
 DATA_DIR = 'data'
 
-CONFIG_MAIN = 'config/沪深A股200亿.xlsx'
-CONFIG_CYB = 'config/创业板100亿.xlsx'
+CONFIG_MAIN = 'config/沪深A股.xlsx'
 
 
 # def update_data(code_name):
@@ -39,18 +38,17 @@ def init_data(code_name):
     stock = code_name[0]
     data = ts.get_k_data(stock, autype='qfq')
     if data is None or data.empty:
-        logging.info("股票："+stock+" 数据下载失败，重试...")
+        logging.info("股票："+stock+" 没有数据，略过...")
         return
     if len(data) < 60:
         logging.info("股票："+stock+" 上市时间小于60日，略过...")
         return
+    data['date'] = pd.to_datetime(data['date'])
     return data
 
 
 def run():
-    stocks_main = utils.get_stocks(CONFIG_MAIN)
-    stocks_cyb = utils.get_stocks(CONFIG_CYB)
-    code_names = stocks_main + stocks_cyb
+    code_names = utils.get_stocks(CONFIG_MAIN)
     append_mode = False
     update_fun = init_data
 

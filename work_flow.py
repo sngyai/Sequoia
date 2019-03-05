@@ -4,6 +4,7 @@ import data_fetcher
 import utils
 import strategy.enter as enter
 from strategy import turtle_trade
+from strategy import backtrace_ma250
 import notify
 import logging
 import db
@@ -12,9 +13,7 @@ import db
 def process():
     logging.info("************************ process start ***************************************")
     utils.prepare()
-    if utils.need_update_data():
-        logging.info("更新数据")
-        data_fetcher.run()
+    data_fetcher.run()
 
     check_exit()
 
@@ -32,9 +31,7 @@ def check_enter(end_date=None):
         stock = code_name[0]
         data = utils.read_data(code_name)
         result = enter.check_ma(stock, data, end_date=end_date) \
-            and turtle_trade.check_enter(stock, data, end_date=end_date) \
-            and enter.check_volume(stock, data, end_date=end_date)
-        # and enter.check_volume(code_name, data, end_date=end_date)
+            and backtrace_ma250.check(stock, data, end_date=end_date)
         if result:
             message = turtle_trade.calculate(code_name, data)
             logging.info("{0} {1}".format(code_name, message))

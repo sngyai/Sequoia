@@ -5,7 +5,9 @@ from talib import ATR
 import strategy.enter as enter
 import strategy.low_atr as low_atr
 import strategy.enter as enter
+import strategy.backtrace_ma250 as backtrace_ma250
 import logging
+import settings
 
 # data = utils.load("000012.h5")
 #
@@ -21,12 +23,17 @@ import logging
 #
 # average_true_range = average_true_range_list[-1]
 #
-# stock = "000977"
-# name = "浪潮信息"
-# data = utils.read_data(stock)
-# # print(data)
-# result = enter.check_ma(stock, data)
-# logging.info("low atr check {0}'s result: {1}".format(stock, result))
+settings.init()
+# stock = ('002017', '东信和平')
+# end = '2019-02-01'
+
+stock = ('600776', '东方通信')
+end = '2019-02-01'
+
+data = utils.read_data(stock)
+# print(data)
+result = enter.check_ma(stock, data) and backtrace_ma250.check(stock, data, end_date=end)
+logging.info("low atr check {0}'s result: {1}".format(stock, result))
 #
 # rolling_window = 21
 # moving_average = 20
@@ -56,8 +63,3 @@ import logging
 #
 # data = ts.get_stock_basics()
 # print(data)
-
-import db
-
-t_shelve = db.ShelvePersistence()
-t_shelve.positions()

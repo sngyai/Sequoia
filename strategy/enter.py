@@ -23,7 +23,7 @@ def check_breakthrough(stock, data, end_date=None, threshold=60):
         if row['close'] > max_price:
             max_price = float(row['close'])
 
-    if last_close > max_price > data.iloc[-1]['close']:
+    if last_close > max_price > data.ilma_daysoc[-1]['close']:
         return True
     else:
         return False

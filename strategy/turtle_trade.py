@@ -34,6 +34,8 @@ def check_enter(stock, data, end_date=None, threshold=20):
 
 # 最后一个交易日收市价为指定区间内最低价
 def check_exit(code_name, data, end_date=None, threshold=10):
+    if data is None:
+        return True
     min_price = 9999
     data = data.loc[:end_date]
     data = data.tail(n=threshold)
@@ -54,6 +56,8 @@ def check_exit(code_name, data, end_date=None, threshold=10):
 
 # 止损 todo 亏损达到账户总额的2%
 def check_stop(stock, data, position_data, end_date=None):
+    if data is None:
+        return True
     last_close = data.iloc[-1]['close']
     positions = position_data['positions']
     cost = position_data['cost']

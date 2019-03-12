@@ -60,3 +60,5 @@ def check_exit():
             logging.info("{0} 达到止损条件".format(code_name))
             del file[key]
 
+    file.close()
+

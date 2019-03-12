@@ -58,6 +58,7 @@ def run():
             stock = future_to_stock[future]
             try:
                 data = future.result()
+                data['code'] = data['code'].apply(lambda x: str(x))
                 if data is not None:
                     file_name = stock[0] + '-' + stock[1] + '.h5'
                     data.to_hdf(DATA_DIR + "/" + file_name, 'data', append=append_mode, format='table')

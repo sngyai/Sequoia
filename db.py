@@ -31,8 +31,8 @@ class ShelvePersistence(object):
         new_position = (last_close, position_size)
         new_cost = position_size * 100 * last_close
 
-        shelve_file = shelve.open(settings.DB_DIR + "/Positions")
         old_data = self.load(stock)
+        shelve_file = shelve.open(settings.DB_DIR + "/Positions")
 
         if old_data is None:
             shelve_file[stock] = {'code_name': code_name, 'positions': [new_position], 'cost': new_cost}

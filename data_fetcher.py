@@ -43,7 +43,6 @@ def init_data(code_name):
     if len(data) < 60:
         logging.info("股票："+stock+" 上市时间小于60日，略过...")
         return
-    data['date'] = pd.to_datetime(data['date'])
     return data
 
 

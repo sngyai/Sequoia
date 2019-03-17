@@ -31,7 +31,7 @@ def check_enter(end_date=None):
         stock = code_name[0]
         data = utils.read_data(code_name)
         result = enter.check_ma(stock, data, end_date=end_date) \
-            and backtrace_ma250.check(stock, data, end_date=end_date)
+            and enter.check_volume(stock, data, end_date=end_date)
         if result:
             message = turtle_trade.calculate(code_name, data)
             logging.info("{0} {1}".format(code_name, message))

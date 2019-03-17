@@ -25,15 +25,14 @@ import settings
 #
 settings.init()
 # stock = ('002017', '东信和平')
-# end = '2019-02-01'
-
+# stock = ('601700', '风范股份')
 stock = ('600776', '东方通信')
 end = '2019-02-01'
 
 data = utils.read_data(stock)
 # print(data)
-result = enter.check_ma(stock, data) and backtrace_ma250.check(stock, data, end_date=end)
-logging.info("low atr check {0}'s result: {1}".format(stock, result))
+result = enter.check_ma(stock, data, end_date=end) and backtrace_ma250.check(stock, data, end_date=end)
+print("low atr check {0}'s result: {1}".format(stock, result))
 #
 # rolling_window = 21
 # moving_average = 20

@@ -13,7 +13,9 @@ def check_low_increase(stock, name, data, end_date=None, ma_short=30, ma_long=25
     # data['ma_short'] = pd.Series(tl.MA(data['close'].values, ma_short), index=data.index.values)
     # data['ma_long'] = pd.Series(tl.MA(data['close'].values, ma_long), index=data.index.values)
 
-    data = data.loc[:end_date]
+    if end_date is not None:
+        mask = (data['date'] <= end_date)
+        data = data.loc[mask]
     data = data.tail(n=threshold)
     inc_days = 0
     dec_days = 0

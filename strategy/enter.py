@@ -9,7 +9,9 @@ import logging
 # 最后一个交易日收市价从下向上突破指定区间内最高价
 def check_breakthrough(stock, data, end_date=None, threshold=60):
     max_price = 0
-    data = data.loc[:end_date]
+    if end_date is not None:
+        mask = (data['date'] <= end_date)
+        data = data.loc[mask]
     data = data.tail(n=threshold+1)
     if data.size < threshold + 1:
         logging.info("{0}:样本小于{1}天...\n".format(stock, threshold))
@@ -43,7 +45,9 @@ def check_ma(stock, data, end_date=None, ma_days=250):
         if end_date < begin_date:  # 该股票在end_date时还未上市
             logging.info("{}在{}时还未上市".format(stock, end_date))
             return False
-    data = data.loc[:end_date]
+    if end_date is not None:
+        mask = (data['date'] <= end_date)
+        data = data.loc[mask]
 
     last_close = data.iloc[-1]['close']
     last_ma = data.iloc[-1][ma_tag]
@@ -58,7 +62,9 @@ def check_volume(code_name, data, end_date=None, threshold=60):
     stock = code_name[0]
     name = code_name[1]
     total_vol = 0
-    data = data.loc[:end_date]
+    if end_date is not None:
+        mask = (data['date'] <= end_date)
+        data = data.loc[mask]
     data = data.tail(n=threshold + 1)
     if data.size < threshold + 1:
         logging.info("{0}:样本小于{1}天...\n".format(stock, threshold))

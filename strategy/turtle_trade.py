@@ -16,7 +16,9 @@ BALANCE = 200000
 # 最后一个交易日收市价为指定区间内最高价
 def check_enter(stock, data, end_date=None, threshold=20):
     max_price = 0
-    data = data.loc[:end_date]
+    if end_date is not None:
+        mask = (data['date'] <= end_date)
+        data = data.loc[mask]
     data = data.tail(n=threshold)
     if data.size < threshold:
         return False
@@ -37,7 +39,9 @@ def check_exit(code_name, data, end_date=None, threshold=10):
     if data is None:
         return True
     min_price = 9999
-    data = data.loc[:end_date]
+    if end_date is not None:
+        mask = (data['date'] <= end_date)
+        data = data.loc[mask]
     data = data.tail(n=threshold)
     if data.size < threshold:
         logging.info("{0}:样本小于{1}天...\n".format(code_name, threshold))

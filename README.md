@@ -2,13 +2,18 @@
 ### 简介
 本程序使用传统的[TuShare接口](http://tushare.org/)，并非需要捐赠的[pro接口](https://tushare.pro/)，获取数据无限制;
 
-另，由于传统的TuShare接口增量更新有bug（最近一个交易日的数据获取不到），所以我每次计算都是删除所有数据，重新拉一遍。
+另，由于TuShare的增量更新接口有bug（最近一个交易日的数据获取不到），所以每次计算前都是删除所有数据，全部重新获取。
 
 本程序实现了若干种选股策略，大家可以自行选择其中的一到多种策略组合使用，参见[work_flow.py](https://github.com/sngyai/Sequoia/blob/master/work_flow.py#L33-L34)
+
 各策略中的end_date参数主要用于回测。
 
 选股的结果在日志文件sequoia.log中；
-用户也可以将本程序作为定时任务运行在服务端，打开[main.py](https://github.com/sngyai/Sequoia/blob/master/main.py#L13-L24)中的注释，并在[notify.py](notify.py)模块中实现自己的推送功能，每天定时将选股结果推送到手机上。
+
+用户也可以将本程序作为定时任务运行在服务端，需要做以下工作：
+* 注释掉[main.py](https://github.com/sngyai/Sequoia/blob/master/main.py#L26-L27)的L26-L27；
+* 打开[main.py](https://github.com/sngyai/Sequoia/blob/master/main.py#L13-L24)中L13-L24的注释；
+* 在[notify.py](notify.py)模块中实现自己的推送功能，每天定时将选股结果推送到手机上。
 
 ## 安装依赖:
  * 根据不同的平台安装TA-Lib程序
@@ -16,7 +21,7 @@
 ### Mac OS X
 
 ```
-$ brew install ta-lib
+$ brew install ta-lib接口
 ```
 
 ### Windows

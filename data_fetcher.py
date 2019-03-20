@@ -37,12 +37,18 @@ CONFIG_MAIN = 'config/沪深A股.xlsx'
 def init_data(code_name):
     stock = code_name[0]
     data = ts.get_k_data(stock, autype='qfq')
+    data_ext = ts.get_hist_data(stock)
+
     if data is None or data.empty:
         logging.info("股票："+stock+" 没有数据，略过...")
         return
     if len(data) < 60:
         logging.info("股票："+stock+" 上市时间小于60日，略过...")
         return
+    if not(data_ext is None or data_ext.empty):
+        data_ext = data_ext.iloc[::-1]
+        data_ext['date'] = data_ext.index
+        data = pd.merge(data, data_ext[['date', 'p_change']], on='date', how='left')
     return data
 
 

@@ -92,10 +92,10 @@ def check_volume(code_name, data, end_date=None, threshold=60):
 
 
 # 量比大于3.0
-def check_continuous_volume(code_name, data, end_date=None, threshold=60, window_size=5):
+def check_continuous_volume(code_name, data, end_date=None, threshold=60, window_size=3):
     stock = code_name[0]
     name = code_name[1]
-    total_vol = 0
+    data['vol_ma5'] = pd.Series(tl.MA(data['volume'].values, 5), index=data.index.values)
     if end_date is not None:
         mask = (data['date'] <= end_date)
         data = data.loc[mask]
@@ -112,10 +112,7 @@ def check_continuous_volume(code_name, data, end_date=None, threshold=60, window
     data_front = data.head(n=threshold)
     data_end = data.tail(n=window_size)
 
-    for index, row in data_front.iterrows():
-        total_vol += float(row['volume'])
-
-    mean_vol = total_vol / threshold
+    mean_vol = data_front.iloc[-1]['vol_ma5']
 
     for index, row in data_end.iterrows():
         if float(row['volume']) / mean_vol < 3.0:

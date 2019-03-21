@@ -3,12 +3,12 @@
 import talib as tl
 import pandas as pd
 import logging
-from datetime import datetime, timedelta
-from strategy import enter
+from strategy import turtle_trade
 
 
 # “停机坪”策略
-def check(code_name, data, end_date=None, threshold=60, window=10):
+def check(code_name, data, end_date=None, threshold=15):
+    origin_data = data
     if data.size < 250:
         logging.info("{0}:样本小于250天...\n".format(code_name))
         return
@@ -24,24 +24,45 @@ def check(code_name, data, end_date=None, threshold=60, window=10):
         mask = (data['date'] <= end_date)
         data = data.loc[mask]
 
-    data = data.tail(n=window)
-    data_rev = data.iloc[::-1]
+    data = data.tail(n=threshold)
 
-    # 涨停日
-    limitup_row = None
+    flag = False
 
-    # 计算区间最高、最低价格
-    for index, row in data_rev.iterrows():
+    # 找出涨停日
+    for index, row in data.iterrows():
         try:
             if float(row['p_change']) > 9.5:
-                if enter.check_volume(code_name, data, row['date'], threshold):
-                    limitup_row = row
-                    break
+                if turtle_trade.check_enter(code_name, origin_data, row['date'], threshold):
+                    if check_internal(code_name, data, row):
+                        flag = True
         except KeyError as error:
             logging.info("{}处理异常：{}".format(code_name, error))
 
-    if limitup_row is None:
+    return flag
+
+
+def check_internal(code_name, data, limitup_row):
+
+    limitup_price = limitup_row['close']
+
+    limitup_end = data.loc[(data['date'] > limitup_row['date'])]
+
+    limitup_end = limitup_end.head(n=3)
+
+    if len(limitup_end.index) < 3:
         return False
+
+    threshold_price = limitup_end.iloc[-1]['close']
+
+    for index, row in limitup_end.iterrows():
+        try:
+            if not (0.95 < (row['close'] / row['open']) < 1.05 and 0.95 < (row['close'] / threshold_price) < 1.05
+                    and row['close'] > limitup_price and row['open'] > limitup_price):
+                return False
+        except KeyError as error:
+            logging.info("{}处理异常：{}".format(code_name, error))
+
+    print("股票{0} 涨停日期：{1}".format(code_name, limitup_row['date']))
 
     return True
 

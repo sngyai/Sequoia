@@ -52,11 +52,18 @@ def check_internal(code_name, data, limitup_row):
     if len(limitup_end.index) < 3:
         return False
 
+    consolidation_day1 = limitup_end.iloc[0]
+    consolidation_day23 = limitup_end = limitup_end.tail(n=2)
+
+    if not(consolidation_day1['close'] > limitup_price and consolidation_day1['open'] > limitup_price and
+        0.97 < consolidation_day1['close'] / consolidation_day1['open'] < 1.03):
+        return False
+
     threshold_price = limitup_end.iloc[-1]['close']
 
-    for index, row in limitup_end.iterrows():
+    for index, row in consolidation_day23.iterrows():
         try:
-            if not (0.95 < (row['close'] / row['open']) < 1.05 and 0.95 < (row['close'] / threshold_price) < 1.05
+            if not (0.97 < (row['close'] / row['open']) < 1.03 and -5 < row['p_change'] < 5
                     and row['close'] > limitup_price and row['open'] > limitup_price):
                 return False
         except KeyError as error:

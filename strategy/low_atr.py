@@ -5,9 +5,11 @@ import logging
 
 
 # 低ATR成长策略
-def check_low_increase(stock, name, data, end_date=None, ma_short=30, ma_long=250, threshold=140):
+def check_low_increase(code_name, data, end_date=None, ma_short=30, ma_long=250, threshold=140):
+    stock = code_name[0]
+    name = code_name[1]
     if data.size < ma_long:
-        logging.info("{0}:样本小于{1}天...\n".format(stock, ma_long))
+        logging.info("{0}:样本小于{1}天...\n".format(code_name, ma_long))
         return False
 
     # data['ma_short'] = pd.Series(tl.MA(data['close'].values, ma_short), index=data.index.values)
@@ -20,14 +22,14 @@ def check_low_increase(stock, name, data, end_date=None, ma_short=30, ma_long=25
     inc_days = 0
     dec_days = 0
     if data.size < threshold:
-        logging.info("{0}:样本小于{1}天...\n".format(stock, threshold))
+        logging.info("{0}:样本小于{1}天...\n".format(code_name, threshold))
         return False
 
     for index, row in data.iterrows():
         p_change = float((row['close'] - row['open']) / row['open'])
 
-        # if p_change < -7.5:
-        #     return False
+        if p_change < -7:
+            return False
         # if row['ma_short'] < row['ma_long']:
         #     return False
 

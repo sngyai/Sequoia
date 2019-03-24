@@ -7,14 +7,14 @@ import logging
 
 # TODO 真实波动幅度（ATR）放大
 # 最后一个交易日收市价从下向上突破指定区间内最高价
-def check_breakthrough(stock, data, end_date=None, threshold=60):
+def check_breakthrough(code_name, data, end_date=None, threshold=60):
     max_price = 0
     if end_date is not None:
         mask = (data['date'] <= end_date)
         data = data.loc[mask]
     data = data.tail(n=threshold+1)
     if data.size < threshold + 1:
-        logging.info("{0}:样本小于{1}天...\n".format(stock, threshold))
+        logging.info("{0}:样本小于{1}天...\n".format(code_name, threshold))
         return False
 
     # 最后一天收市价
@@ -32,9 +32,9 @@ def check_breakthrough(stock, data, end_date=None, threshold=60):
 
 
 # 收盘价高于N日均线
-def check_ma(stock, data, end_date=None, ma_days=250):
+def check_ma(code_name, data, end_date=None, ma_days=250):
     if data.size < ma_days:
-        logging.info("{0}:样本小于{1}天...\n".format(stock, ma_days))
+        logging.info("{0}:样本小于{1}天...\n".format(code_name, ma_days))
         return False
 
     ma_tag = 'ma' + str(ma_days)
@@ -43,7 +43,7 @@ def check_ma(stock, data, end_date=None, ma_days=250):
     begin_date = data.iloc[0].date
     if end_date is not None:
         if end_date < begin_date:  # 该股票在end_date时还未上市
-            logging.info("{}在{}时还未上市".format(stock, end_date))
+            logging.info("{}在{}时还未上市".format(code_name, end_date))
             return False
     if end_date is not None:
         mask = (data['date'] <= end_date)
@@ -67,7 +67,7 @@ def check_volume(code_name, data, end_date=None, threshold=60):
         data = data.loc[mask]
     data = data.tail(n=threshold + 1)
     if data.size < threshold + 1:
-        logging.info("{0}:样本小于{1}天...\n".format(stock, threshold))
+        logging.info("{0}:样本小于{1}天...\n".format(code_name, threshold))
         return False
 
     # 最后一天收盘价
@@ -82,9 +82,8 @@ def check_volume(code_name, data, end_date=None, threshold=60):
 
     mean_vol = total_vol / threshold
     vol_ratio = last_vol / mean_vol
-    if vol_ratio >= 7:
-
-        msg = "*{0}({1}) 量比：{2:.2f}\n\t收盘价：{3}\n".format(name, stock, vol_ratio, last_close)
+    if vol_ratio >= 3:
+        msg = "*{0} 量比：{1:.2f}\n\t收盘价：{2}\n".format(code_name, vol_ratio, last_close)
         logging.info(msg)
         return True
     else:
@@ -101,7 +100,7 @@ def check_continuous_volume(code_name, data, end_date=None, threshold=60, window
         data = data.loc[mask]
     data = data.tail(n=threshold + window_size)
     if data.size < threshold + window_size:
-        logging.info("{0}:样本小于{1}天...\n".format(stock, threshold+window_size))
+        logging.info("{0}:样本小于{1}天...\n".format(code_name, threshold+window_size))
         return False
 
     # 最后一天收盘价
@@ -118,6 +117,6 @@ def check_continuous_volume(code_name, data, end_date=None, threshold=60, window
         if float(row['volume']) / mean_vol < 3.0:
             return False
 
-    msg = "*{0}({1}) 量比：{2:.2f}\n\t收盘价：{3}\n".format(name, stock, last_vol/mean_vol, last_close)
+    msg = "*{0} 量比：{1:.2f}\n\t收盘价：{2}\n".format(code_name, last_vol/mean_vol, last_close)
     logging.info(msg)
     return True

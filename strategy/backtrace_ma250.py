@@ -5,22 +5,23 @@ import pandas as pd
 import logging
 from datetime import datetime, timedelta
 
-# 使用示例：result = backtrace_ma250.check(stock, data, end_date=end_date)
+# 使用示例：result = backtrace_ma250.check(code_name, data, end_date=end_date)
 # 如：当end_date='2019-02-01'，输出选股结果如下：
 # [('601616', '广电电气'), ('002243', '通产丽星'), ('000070', '特发信息'), ('300632', '光莆股份'), ('601700', '风范股份'), ('002017', '东信和平'), ('600775', '南京熊猫'), ('300265', '通光线缆'), ('600677', '航天通信'), ('600776', '东方通信')]
 # 当然，该函数中的参数可能存在过拟合的问题
 
+
 # 回踩年线策略
-def check(stock, data, end_date=None, threshold=60):
+def check(code_name, data, end_date=None, threshold=60):
     if data.size < 250:
-        logging.info("{0}:样本小于250天...\n".format(stock))
+        logging.info("{0}:样本小于250天...\n".format(code_name))
         return
     data['ma250'] = pd.Series(tl.MA(data['close'].values, 250), index=data.index.values)
 
     begin_date = data.iloc[0].date
     if end_date is not None:
         if end_date < begin_date:  # 该股票在end_date时还未上市
-            logging.info("{}在{}时还未上市".format(stock, end_date))
+            logging.info("{}在{}时还未上市".format(code_name, end_date))
             return False
 
     if end_date is not None:

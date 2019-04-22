@@ -42,13 +42,15 @@ def init_data(code_name):
     if data is None or data.empty:
         logging.info("股票："+stock+" 没有数据，略过...")
         return
+    for i in range(1, len(data)):
+        data.loc[i, 'p_change'] = round((data.loc[i, 'close'] - data.loc[i - 1, 'close']) / data.loc[i - 1, 'close'] * 100, 2)
     if len(data) < 60:
         logging.info("股票："+stock+" 上市时间小于60日，略过...")
         return
     if not(data_ext is None or data_ext.empty):
         data_ext = data_ext.iloc[::-1]
         data_ext['date'] = data_ext.index
-        data = pd.merge(data, data_ext[['date', 'p_change']], on='date', how='left')
+        data = pd.merge(data, data_ext[['p_change']], on='date', how='left')
     return data
 
 

@@ -5,7 +5,7 @@ import logging
 
 
 # 低ATR成长策略
-def check_low_increase(code_name, data, end_date=None, ma_short=30, ma_long=250, threshold=140):
+def check_low_increase(code_name, data, end_date=None, ma_short=30, ma_long=250, threshold=30):
     stock = code_name[0]
     name = code_name[1]
     if data.size < ma_long:
@@ -25,11 +25,16 @@ def check_low_increase(code_name, data, end_date=None, ma_short=30, ma_long=250,
         logging.info("{0}:样本小于{1}天...\n".format(code_name, threshold))
         return False
 
-    for index, row in data.iterrows():
-        p_change = float((row['close'] - row['open']) / row['open'])
+    # 区间最低点
+    lowest_row = data.iloc[-1]
+    # 区间最高点
+    highest_row = data.iloc[-1]
 
-        if p_change < -7:
-            return False
+    for index, row in data.iterrows():
+        p_change = float(row['p_change'])
+
+        # if p_change < -7:
+        #     return False
         # if row['ma_short'] < row['ma_long']:
         #     return False
 
@@ -38,11 +43,15 @@ def check_low_increase(code_name, data, end_date=None, ma_short=30, ma_long=250,
         if p_change < 0:
             dec_days = dec_days + 1
 
-    begin = data.iloc[0]['close']
-    end = data.iloc[-1]['close']
-    ratio = (end - begin) / begin
+        if row['close'] > highest_row['close']:
+            highest_row = row
+        if row['close'] < lowest_row['close']:
+            lowest_row = row
 
-    if ratio > 0.2:
-        logging.info("股票：{0}（{1}）  初始价:{2}, 当前价:{3}, 涨跌比率:{4}       上涨天数:{5}， 下跌天数:{6}".format(name, stock, begin, end, ratio, inc_days, dec_days))
+    ratio = (highest_row['close'] - lowest_row['close']) / lowest_row['close']
 
-    return True
+    if ratio > 2:
+        logging.info("股票：{0}（{1}）  最低:{2}, 最高:{3}, 涨跌比率:{4}       上涨天数:{5}， 下跌天数:{6}".format(name, stock, lowest_row['date'], highest_row['date'], ratio, inc_days, dec_days))
+        return True
+
+    return False

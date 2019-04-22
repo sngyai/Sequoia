@@ -7,7 +7,7 @@ import logging
 
 # TODO 真实波动幅度（ATR）放大
 # 最后一个交易日收市价从下向上突破指定区间内最高价
-def check_breakthrough(code_name, data, end_date=None, threshold=60):
+def check_breakthrough(code_name, data, end_date=None, threshold=30):
     max_price = 0
     if end_date is not None:
         mask = (data['date'] <= end_date)
@@ -18,14 +18,18 @@ def check_breakthrough(code_name, data, end_date=None, threshold=60):
         return False
 
     # 最后一天收市价
-    last_close = data.iloc[-1]['close']
+    last_close = float(data.iloc[-1]['close'])
+    last_open = float(data.iloc[-1]['open'])
 
     data = data.head(n=threshold)
+    second_last_close = data.iloc[-1]['close']
+
     for index, row in data.iterrows():
         if row['close'] > max_price:
             max_price = float(row['close'])
 
-    if last_close > max_price > data.ilma_daysoc[-1]['close']:
+    if last_close > max_price > second_last_close and max_price > last_open \
+            and last_close / last_open > 1.06:
         return True
     else:
         return False
@@ -57,6 +61,15 @@ def check_ma(code_name, data, end_date=None, ma_days=250):
         return False
 
 
+# 上市日小于60天
+def check_new(code_name, data, end_date=None, threshold=60):
+    size = len(data.index)
+    if size < threshold:
+        return True
+    else:
+        return False
+
+
 # 量比大于3.0
 def check_volume(code_name, data, end_date=None, threshold=60):
     stock = code_name[0]
@@ -82,7 +95,7 @@ def check_volume(code_name, data, end_date=None, threshold=60):
 
     mean_vol = total_vol / threshold
     vol_ratio = last_vol / mean_vol
-    if vol_ratio >= 3:
+    if vol_ratio >= 2:
         msg = "*{0} 量比：{1:.2f}\n\t收盘价：{2}\n".format(code_name, vol_ratio, last_close)
         logging.info(msg)
         return True

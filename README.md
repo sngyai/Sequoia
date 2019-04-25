@@ -21,7 +21,7 @@
 ### Mac OS X
 
 ```
-$ brew install ta-lib接口
+$ brew install ta-lib
 ```
 
 ### Windows

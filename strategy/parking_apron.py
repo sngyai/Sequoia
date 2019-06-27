@@ -9,10 +9,6 @@ from strategy import turtle_trade
 # “停机坪”策略
 def check(code_name, data, end_date=None, threshold=15):
     origin_data = data
-    if data.size < 250:
-        logging.info("{0}:样本小于250天...\n".format(code_name))
-        return
-    data['ma250'] = pd.Series(tl.MA(data['close'].values, 250), index=data.index.values)
 
     begin_date = data.iloc[0].date
     if end_date is not None:
@@ -23,6 +19,10 @@ def check(code_name, data, end_date=None, threshold=15):
     if end_date is not None:
         mask = (data['date'] <= end_date)
         data = data.loc[mask]
+
+    if len(data) < threshold:
+        logging.info("{0}:样本小于{1}天...\n".format(code_name, threshold))
+        return
 
     data = data.tail(n=threshold)
 
@@ -69,7 +69,7 @@ def check_internal(code_name, data, limitup_row):
         except KeyError as error:
             logging.info("{}处理异常：{}".format(code_name, error))
 
-    print("股票{0} 涨停日期：{1}".format(code_name, limitup_row['date']))
+    logging.info("股票{0} 涨停日期：{1}".format(code_name, limitup_row['date']))
 
     return True
 

@@ -9,7 +9,7 @@ from strategy import enter
 # 平台突破策略
 def check(code_name, data, end_date=None, threshold=60):
     origin_data = data
-    if data.size < 250:
+    if len(data) < 250:
         logging.info("{0}:样本小于250天...\n".format(code_name))
         return
     data['ma60'] = pd.Series(tl.MA(data['close'].values, 60), index=data.index.values)
@@ -43,7 +43,7 @@ def check(code_name, data, end_date=None, threshold=60):
         if not (-0.05 < (row['ma60'] - row['close']) / row['ma60'] < 0.2):
             return False
 
-    print("股票{0} 突破日期：{1}".format(code_name, breakthrough_row['date']))
+    logging.info("股票{0} 突破日期：{1}".format(code_name, breakthrough_row['date']))
 
     return True
 

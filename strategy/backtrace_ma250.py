@@ -13,7 +13,7 @@ from datetime import datetime, timedelta
 
 # 回踩年线策略
 def check(code_name, data, end_date=None, threshold=60):
-    if data.size < 250:
+    if len(data) < 250:
         logging.info("{0}:样本小于250天...\n".format(code_name))
         return
     data['ma250'] = pd.Series(tl.MA(data['close'].values, 250), index=data.index.values)
@@ -80,6 +80,6 @@ def check(code_name, data, end_date=None, threshold=60):
     if not (vol_ratio > 2 and back_ratio < 0.8) :
         return False
 
-    print("{0} 回撤幅度: {1}".format(code_name, 1 - back_ratio))
+    logging.info("{0} 回撤幅度: {1}".format(code_name, 1 - back_ratio))
     return True
 

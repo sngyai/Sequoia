@@ -13,7 +13,7 @@ def check_breakthrough(code_name, data, end_date=None, threshold=30):
         mask = (data['date'] <= end_date)
         data = data.loc[mask]
     data = data.tail(n=threshold+1)
-    if data.size < threshold + 1:
+    if len(data) < threshold + 1:
         logging.info("{0}:样本小于{1}天...\n".format(code_name, threshold))
         return False
 
@@ -37,7 +37,7 @@ def check_breakthrough(code_name, data, end_date=None, threshold=30):
 
 # 收盘价高于N日均线
 def check_ma(code_name, data, end_date=None, ma_days=250):
-    if data.size < ma_days:
+    if len(data) < ma_days:
         logging.info("{0}:样本小于{1}天...\n".format(code_name, ma_days))
         return False
 
@@ -92,7 +92,7 @@ def check_volume(code_name, data, end_date=None, threshold=60):
             or data.iloc[-1]['close'] < data.iloc[-1]['open']:
         return False
     data = data.tail(n=threshold + 1)
-    if data.size < threshold + 1:
+    if len(data) < threshold + 1:
         logging.info("{0}:样本小于{1}天...\n".format(code_name, threshold))
         return False
 
@@ -129,7 +129,7 @@ def check_continuous_volume(code_name, data, end_date=None, threshold=60, window
         mask = (data['date'] <= end_date)
         data = data.loc[mask]
     data = data.tail(n=threshold + window_size)
-    if data.size < threshold + window_size:
+    if len(data) < threshold + window_size:
         logging.info("{0}:样本小于{1}天...\n".format(code_name, threshold+window_size))
         return False
 

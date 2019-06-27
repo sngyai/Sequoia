@@ -27,6 +27,7 @@ def process():
         check_exit()
 
     strategies = {
+        '海龟交易法则': turtle_trade.check_enter,
         '放量上涨': enter.check_volume,
         '停机坪': parking_apron.check,
         '回踩年线': backtrace_ma250.check,
@@ -45,18 +46,18 @@ def check(stocks, strategy, strategy_func):
     m_filter = check_enter(end_date=end, strategy_fun=strategy_func)
     results = list(filter(m_filter, stocks))
 
-    logging.info('**************"{0}"**************\n{1}'.format(strategy, results))
-    notify.notify('**************"{0}"**************\n{1}'.format(strategy, results))
+    logging.info('**************"{0}"**************\n{1}\n**************"{0}"**************\n'.format(strategy, results))
+    notify.notify('**************"{0}"**************\n{1}\n**************"{0}"**************\n'.format(strategy, results))
 
 
 def check_enter(end_date=None, strategy_fun=enter.check_volume):
     def end_date_filter(code_name):
         data = utils.read_data(code_name)
         result = strategy_fun(code_name, data, end_date=end_date)
-        if result:
-            message = turtle_trade.calculate(code_name, data)
-            logging.info("{0} {1}".format(code_name, message))
-            # notify.notify("{0} {1}".format(code_name, message))
+        # if result:
+        #     message = turtle_trade.calculate(code_name, data)
+        #     logging.info("{0} {1}".format(code_name, message))
+        #     notify.notify("{0} {1}".format(code_name, message))
         return result
 
     return end_date_filter
@@ -75,7 +76,6 @@ def statistics(all_data, stocks):
         return enter.check_ma(stock, stock_data)
 
     ma250_count = len(list(filter(ma250, stocks)))
-    print(ma250_count)
 
     msg = "涨停数：{}   跌停数：{}\n涨幅大于5%数：{}  跌幅大于5%数：{}\n年线以上个股数量：    {}"\
         .format(limitup, limitdown, up5, down5, ma250_count)

@@ -8,7 +8,7 @@ import logging
 def check_low_increase(code_name, data, end_date=None, ma_short=30, ma_long=250, threshold=10):
     stock = code_name[0]
     name = code_name[1]
-    if data.size < ma_long:
+    if len(data) < ma_long:
         logging.info("{0}:样本小于{1}天...\n".format(code_name, ma_long))
         return False
 
@@ -21,7 +21,7 @@ def check_low_increase(code_name, data, end_date=None, ma_short=30, ma_long=250,
     data = data.tail(n=threshold)
     inc_days = 0
     dec_days = 0
-    if data.size < threshold:
+    if len(data) < threshold:
         logging.info("{0}:样本小于{1}天...\n".format(code_name, threshold))
         return False
 

@@ -5,6 +5,7 @@ import pandas as pd
 import datetime
 import logging
 import settings
+import talib as tl
 
 import utils
 
@@ -34,31 +35,22 @@ from pandas.tseries.offsets import *
 def init_data(code_name):
     stock = code_name[0]
     data = ts.get_k_data(stock, autype='qfq')
-    data_ext = ts.get_hist_data(stock)
 
     if data is None or data.empty:
         logging.info("股票："+stock+" 没有数据，略过...")
         return
-    # for i in range(1, len(data)):
-    #     data.loc[i, 'p_change'] = round((data.loc[i, 'close'] - data.loc[i - 1, 'close']) / data.loc[i - 1, 'close'] * 100, 2)
-    if len(data) < 60:
-        logging.info("股票："+stock+" 上市时间小于60日，略过...")
-        return
-    if data_ext is None or data_ext.empty:
-        return
-    data_ext = data_ext.iloc[::-1]
-    data_ext['date'] = data_ext.index
-    data = pd.merge(data, data_ext[['p_change']], on='date', how='left')
+
+    data['p_change'] = tl.ROC(data['close'], 1)
+
     return data
 
 
-def run():
-    code_names = utils.get_stocks(settings.CONFIG)
+def run(stocks):
     append_mode = False
     update_fun = init_data
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
-        future_to_stock = {executor.submit(update_fun, stock): stock for stock in code_names}
+        future_to_stock = {executor.submit(update_fun, stock): stock for stock in stocks}
         for future in concurrent.futures.as_completed(future_to_stock):
             stock = future_to_stock[future]
             try:

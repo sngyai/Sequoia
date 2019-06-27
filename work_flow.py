@@ -12,52 +12,63 @@ import tushare as ts
 import notify
 import logging
 import db
-import settings
+import time
 
 
 def process():
     logging.info("************************ process start ***************************************")
+    all_data = ts.get_today_all()
+    subset = all_data[['code', 'name', 'nmc']]
+    stocks = [tuple(x) for x in subset.values]
+
     if utils.need_update_data():
         utils.prepare()
-        data_fetcher.run()
+        data_fetcher.run(stocks)
         check_exit()
 
-    stocks = utils.get_stocks()
-    m_filter = check_enter(end_date=None)
-    results = list(filter(m_filter, stocks))
+    strategies = {
+        '放量上涨': enter.check_volume,
+        '停机坪': parking_apron.check,
+        '回踩年线': backtrace_ma250.check,
+    }
 
-    statistics(stocks)
+    for strategy, strategy_func in strategies.items():
+        check(stocks, strategy, strategy_func)
+        time.sleep(2)
 
-    logging.info('选股结果：{0}'.format(results))
-    notify.notify('选股结果：{0}'.format(results))
+    statistics(all_data, stocks)
     logging.info("************************ process   end ***************************************")
 
 
-def check_enter(end_date=None):
+def check(stocks, strategy, strategy_func):
+    end = None
+    m_filter = check_enter(end_date=end, strategy_fun=strategy_func)
+    results = list(filter(m_filter, stocks))
+
+    logging.info('**************"{0}"**************\n{1}'.format(strategy, results))
+    notify.notify('**************"{0}"**************\n{1}'.format(strategy, results))
+
+
+def check_enter(end_date=None, strategy_fun=enter.check_volume):
     def end_date_filter(code_name):
         data = utils.read_data(code_name)
-        # result = parking_apron.check(code_name, data, end_date=end_date)
-        # result = low_atr.check_low_increase(code_name, data, end_date=end_date)
-        # result = enter.check_ma(code_name, data, end_date=end_date)
-        result = enter.check_volume(code_name, data, end_date=end_date)
-                 # and enter.check_volume(code_name, data, end_date=end_date)
+        result = strategy_fun(code_name, data, end_date=end_date)
         if result:
             message = turtle_trade.calculate(code_name, data)
             logging.info("{0} {1}".format(code_name, message))
-            notify.notify("{0} {1}".format(code_name, message))
+            # notify.notify("{0} {1}".format(code_name, message))
         return result
 
     return end_date_filter
 
 
 # 统计数据
-def statistics(stocks):
-    data = ts.get_today_all()
-    limitup = len(data.loc[(data['changepercent'] >= 9.5)])
-    limitdown = len(data.loc[(data['changepercent'] <= -9.5)])
+def statistics(all_data, stocks):
+    limitup = len(all_data.loc[(all_data['changepercent'] >= 9.5)])
+    limitdown = len(all_data.loc[(all_data['changepercent'] <= -9.5)])
 
-    up5 = len(data.loc[(data['changepercent'] >= 5)])
-    down5 = len(data.loc[(data['changepercent'] <= -5)])
+    up5 = len(all_data.loc[(all_data['changepercent'] >= 5)])
+    down5 = len(all_data.loc[(all_data['changepercent'] <= -5)])
 
     def ma250(stock):
         stock_data = utils.read_data(stock)

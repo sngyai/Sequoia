@@ -77,6 +77,10 @@ def check_new(code_name, data, end_date=None, threshold=60):
 #   2019-01-29 新城控股
 #   2017-11-16 保利地产
 def check_volume(code_name, data, end_date=None, threshold=60):
+    # 流通市值不低于300亿
+    if code_name[2] < 3000000:
+        return False
+
     data['vol_ma5'] = pd.Series(tl.MA(data['volume'].values, 5), index=data.index.values)
     if end_date is not None:
         mask = (data['date'] <= end_date)

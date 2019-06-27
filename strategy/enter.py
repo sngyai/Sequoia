@@ -70,14 +70,23 @@ def check_new(code_name, data, end_date=None, threshold=60):
         return False
 
 
-# 量比大于3.0
+# 量比大于2.5
+# 例如：
+#   2017-09-26 2019-02-11 京东方A
+#   2019-03-22 浙江龙盛
+#   2019-01-29 新城控股
+#   2017-11-16 保利地产
 def check_volume(code_name, data, end_date=None, threshold=60):
-    stock = code_name[0]
-    name = code_name[1]
-    total_vol = 0
+    data['vol_ma5'] = pd.Series(tl.MA(data['volume'].values, 5), index=data.index.values)
     if end_date is not None:
         mask = (data['date'] <= end_date)
         data = data.loc[mask]
+    if data.empty:
+        return False
+    p_change = data.iloc[-1]['p_change']
+    if p_change < 2 \
+            or data.iloc[-1]['close'] < data.iloc[-1]['open']:
+        return False
     data = data.tail(n=threshold + 1)
     if data.size < threshold + 1:
         logging.info("{0}:样本小于{1}天...\n".format(code_name, threshold))
@@ -88,15 +97,19 @@ def check_volume(code_name, data, end_date=None, threshold=60):
     # 最后一天成交量
     last_vol = data.iloc[-1]['volume']
 
+    amount = last_close * last_vol * 100
+
+    # 成交额不低于1亿
+    if amount < 100000000:
+        return False
+
     data = data.head(n=threshold)
 
-    for index, row in data.iterrows():
-        total_vol += float(row['volume'])
+    mean_vol = data.iloc[-1]['vol_ma5']
 
-    mean_vol = total_vol / threshold
     vol_ratio = last_vol / mean_vol
-    if vol_ratio >= 2:
-        msg = "*{0} 量比：{1:.2f}\n\t收盘价：{2}\n".format(code_name, vol_ratio, last_close)
+    if vol_ratio >= 1.8:
+        msg = "*{0}\n量比：{1:.2f}\t涨幅：{2}%\n".format(code_name, vol_ratio, p_change)
         logging.info(msg)
         return True
     else:

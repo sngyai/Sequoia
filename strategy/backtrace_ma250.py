@@ -5,7 +5,7 @@ import pandas as pd
 import logging
 from datetime import datetime, timedelta
 
-# 使用示例：result = backtrace_ma250.check(code_name, data, end_date=end_date)
+    # 使用示例：result = backtrace_ma250.check(code_name, data, end_date=end_date)
 # 如：当end_date='2019-02-01'，输出选股结果如下：
 # [('601616', '广电电气'), ('002243', '通产丽星'), ('000070', '特发信息'), ('300632', '光莆股份'), ('601700', '风范股份'), ('002017', '东信和平'), ('600775', '南京熊猫'), ('300265', '通光线缆'), ('600677', '航天通信'), ('600776', '东方通信')]
 # 当然，该函数中的参数可能存在过拟合的问题
@@ -75,9 +75,9 @@ def check(code_name, data, end_date=None, threshold=60):
         return False
     # 回踩伴随缩量
     vol_ratio = highest_row['volume']/recent_lowest_row['volume']
-    back_ratio = highest_row['close'] / recent_lowest_row['close']
+    back_ratio = recent_lowest_row['close'] / highest_row['close']
 
-    if not (vol_ratio > 2 and back_ratio > 1.3) :
+    if not (vol_ratio > 2 and back_ratio < 0.7) :
         return False
 
     print("{0} 回撤幅度: {1}".format(code_name, 1 - back_ratio))

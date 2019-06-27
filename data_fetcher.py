@@ -4,16 +4,13 @@ import tushare as ts
 import pandas as pd
 import datetime
 import logging
+import settings
 
 import utils
 
 import concurrent.futures
 
 from pandas.tseries.offsets import *
-
-DATA_DIR = 'data'
-
-CONFIG_MAIN = 'config/沪深A股.xlsx'
 
 
 # def update_data(code_name):
@@ -47,15 +44,16 @@ def init_data(code_name):
     if len(data) < 60:
         logging.info("股票："+stock+" 上市时间小于60日，略过...")
         return
-    if not(data_ext is None or data_ext.empty):
-        data_ext = data_ext.iloc[::-1]
-        data_ext['date'] = data_ext.index
-        data = pd.merge(data, data_ext[['p_change']], on='date', how='left')
+    if data_ext is None or data_ext.empty:
+        return
+    data_ext = data_ext.iloc[::-1]
+    data_ext['date'] = data_ext.index
+    data = pd.merge(data, data_ext[['p_change']], on='date', how='left')
     return data
 
 
 def run():
-    code_names = utils.get_stocks(CONFIG_MAIN)
+    code_names = utils.get_stocks(settings.CONFIG)
     append_mode = False
     update_fun = init_data
 
@@ -68,6 +66,6 @@ def run():
                 data['code'] = data['code'].apply(lambda x: str(x))
                 if data is not None:
                     file_name = stock[0] + '-' + stock[1] + '.h5'
-                    data.to_hdf(DATA_DIR + "/" + file_name, 'data', append=append_mode, format='table')
+                    data.to_hdf(settings.DATA_DIR + "/" + file_name, 'data', append=append_mode, format='table')
             except Exception as exc:
                 print('%s(%r) generated an exception: %s' % (stock[1], stock[0], exc))

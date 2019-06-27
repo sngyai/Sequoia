@@ -6,6 +6,8 @@ import strategy.enter as enter
 import strategy.low_atr as low_atr
 import strategy.enter as enter
 import strategy.backtrace_ma250 as backtrace_ma250
+import strategy.parking_apron as parking_apron
+import strategy.breakthrough_platform as breakthrough_platform
 import logging
 import settings
 
@@ -24,15 +26,19 @@ import settings
 # average_true_range = average_true_range_list[-1]
 #
 settings.init()
-# stock = ('002017', '东信和平')
-# stock = ('601700', '风范股份')
-stock = ('600776', '东方通信')
-end = '2019-02-01'
+# code_name = ('300623', '捷捷微电')
+# code_name = ('600145', '*ST新亿')
+# code_name = ('601700', '风范股份')
+# code_name = ('000725', '京东方Ａ')
+code_name = ('002157', '正邦科技')
+# code_name = ('300663', '科蓝软件')
+# end = '2017-09-26'
+end = '2019-02-15'
 
-data = utils.read_data(stock)
+data = utils.read_data(code_name)
 # print(data)
-result = enter.check_ma(stock, data, end_date=end) and backtrace_ma250.check(stock, data, end_date=end)
-print("low atr check {0}'s result: {1}".format(stock, result))
+result = enter.check_volume(code_name, data, end_date=end)
+print("low atr check {0}'s result: {1}".format(code_name, result))
 #
 # rolling_window = 21
 # moving_average = 20

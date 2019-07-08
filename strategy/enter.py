@@ -103,8 +103,8 @@ def check_volume(code_name, data, end_date=None, threshold=60):
 
     amount = last_close * last_vol * 100
 
-    # 成交额不低于1亿
-    if amount < 100000000:
+    # 成交额不低于3亿
+    if amount < 300000000:
         return False
 
     data = data.head(n=threshold)

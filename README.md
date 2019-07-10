@@ -45,7 +45,7 @@ $ sudo make install
 $ python main.py
 ```
 运行结果查看日志文件[sequoia.log](sequoia.log)
-也可参考[notify.py](notify.py)模块，自行实现推送相关的功能
+也可参考[notice.py](notice.py)模块，自行实现推送相关的功能
 
 ### 服务器端运行
 用户也可以将本程序作为定时任务运行在服务端，需要做以下工作：

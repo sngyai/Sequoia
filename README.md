@@ -55,11 +55,10 @@ $ python main.py
 ](https://github.com/ChatSecure/ChatSecure-iOS)，我采用的推送方案是`ejabberd`搭配`Conversations`。
 效果如图
 
-统计信息：
-![statistics](images/statistics.png?raw=true "Optional Title")
+![statistics](images/statistics.jpg?raw=true "统计信息")
 
-策略选股：
-![strategy](images/strategy.png?raw=true "Optional Title")
+
+![strategy](images/strategy.jpg?raw=true "策略选股")
 
 
 

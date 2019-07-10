@@ -57,4 +57,4 @@ $ python main.py
 
 ## 如何回测
 
-修改[work_flow.py](https://github.com/sngyai/Sequoia/blob/master/work_flow.py#L45)为指定日期，格式如`'2019-06-17'`
+修改[work_flow.py#L45](https://github.com/sngyai/Sequoia/blob/master/work_flow.py#L45)为指定日期，格式如`'2019-06-17'`

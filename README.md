@@ -51,7 +51,8 @@ $ python main.py
 用户也可以将本程序作为定时任务运行在服务端，需要做以下工作：
 * 注释掉[main.py](https://github.com/sngyai/Sequoia/blob/master/main.py#L26-L27)的L26-L27；
 * 打开[main.py](https://github.com/sngyai/Sequoia/blob/master/main.py#L13-L24)中L13-L24的注释；
-* 在[notify.py](notify.py)模块中实现自己的推送功能，每天定时将选股结果推送到手机上。
+* 在[notify.py](notify.py)模块中实现自己的推送功能，每天定时将选股结果推送到手机上。服务端推荐使用[ejabberd](https://github.com/processone/ejabberd)，客户端Android推荐使用[Conversations](https://github.com/siacs/Conversations)，iOS没有开发者证书的话推送不了，有证书推荐使用[ChatSecure-iOS
+](https://github.com/ChatSecure/ChatSecure-iOS)，我采用的推送方案是`ejabberd`搭配`Conversations`。
 
 
 ## 如何回测

@@ -61,7 +61,7 @@ print("low atr check {0}'s result: {1}".format(code_name, result))
 #
 # results = ['300188', '600271']
 # msg = '\n'.join("*代码：%s" % ''.join(x) for x in results)
-# notify.notify(msg)
+# notice.push(msg)
 # print(results)
 
 # import tushare as ts

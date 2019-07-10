@@ -9,7 +9,7 @@ from strategy import breakthrough_platform
 from strategy import parking_apron
 from strategy import low_atr
 import tushare as ts
-import notify
+import notice
 import logging
 import db
 import time
@@ -47,7 +47,7 @@ def check(stocks, strategy, strategy_func):
     results = list(filter(m_filter, stocks))
 
     logging.info('**************"{0}"**************\n{1}\n**************"{0}"**************\n'.format(strategy, results))
-    notify.notify('**************"{0}"**************\n{1}\n**************"{0}"**************\n'.format(strategy, results))
+    notice.push('**************"{0}"**************\n{1}\n**************"{0}"**************\n'.format(strategy, results))
 
 
 def check_enter(end_date=None, strategy_fun=enter.check_volume):
@@ -57,7 +57,7 @@ def check_enter(end_date=None, strategy_fun=enter.check_volume):
         # if result:
         #     message = turtle_trade.calculate(code_name, data)
         #     logging.info("{0} {1}".format(code_name, message))
-        #     notify.notify("{0} {1}".format(code_name, message))
+        #     notice.push("{0} {1}".format(code_name, message))
         return result
 
     return end_date_filter
@@ -90,11 +90,11 @@ def check_exit():
         code_name = file[key]['code_name']
         data = utils.read_data(code_name)
         if turtle_trade.check_exit(code_name, data):
-            notify.notify("{0} 达到退出条件".format(code_name))
+            notice.push("{0} 达到退出条件".format(code_name))
             logging.info("{0} 达到退出条件".format(code_name))
             del file[key]
         elif turtle_trade.check_stop(code_name, data, file[key]):
-            notify.notify("{0} 达到止损条件".format(code_name))
+            notice.push("{0} 达到止损条件".format(code_name))
             logging.info("{0} 达到止损条件".format(code_name))
             del file[key]
 

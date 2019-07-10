@@ -47,7 +47,7 @@ def check(stocks, strategy, strategy_func):
     results = list(filter(m_filter, stocks))
 
     logging.info('**************"{0}"**************\n{1}\n**************"{0}"**************\n'.format(strategy, results))
-    notice.push('**************"{0}"**************\n{1}\n**************"{0}"**************\n'.format(strategy, results))
+    notice.strategy('**************"{0}"**************\n{1}\n**************"{0}"**************\n'.format(strategy, results))
 
 
 def check_enter(end_date=None, strategy_fun=enter.check_volume):
@@ -80,7 +80,7 @@ def statistics(all_data, stocks):
     msg = "涨停数：{}   跌停数：{}\n涨幅大于5%数：{}  跌幅大于5%数：{}\n年线以上个股数量：    {}"\
         .format(limitup, limitdown, up5, down5, ma250_count)
     logging.info(msg)
-    notify.statistics(msg)
+    notice.statistics(msg)
 
 
 def check_exit():
@@ -90,11 +90,11 @@ def check_exit():
         code_name = file[key]['code_name']
         data = utils.read_data(code_name)
         if turtle_trade.check_exit(code_name, data):
-            notice.push("{0} 达到退出条件".format(code_name))
+            notice.strategy("{0} 达到退出条件".format(code_name))
             logging.info("{0} 达到退出条件".format(code_name))
             del file[key]
         elif turtle_trade.check_stop(code_name, data, file[key]):
-            notice.push("{0} 达到止损条件".format(code_name))
+            notice.strategy("{0} 达到止损条件".format(code_name))
             logging.info("{0} 达到止损条件".format(code_name))
             del file[key]
 

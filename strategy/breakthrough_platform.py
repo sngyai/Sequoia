@@ -10,7 +10,7 @@ from strategy import enter
 def check(code_name, data, end_date=None, threshold=60):
     origin_data = data
     if len(data) < 250:
-        logging.info("{0}:样本小于250天...\n".format(code_name))
+        logging.debug("{0}:样本小于250天...\n".format(code_name))
         return
     data['ma60'] = pd.Series(tl.MA(data['close'].values, 60), index=data.index.values)
 

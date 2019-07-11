@@ -7,7 +7,7 @@ import settings
 import schedule
 import time
 
-logging.basicConfig(format='%(asctime)s %(message)s', filename='sequoia.log', level=logging.DEBUG)
+logging.basicConfig(format='%(asctime)s %(message)s', filename='sequoia.log', level=logging.INFO)
 
 
 # def job():

@@ -37,7 +37,7 @@ def check_breakthrough(code_name, data, end_date=None, threshold=30):
 
 # 收盘价高于N日均线
 def check_ma(code_name, data, end_date=None, ma_days=250):
-    if len(data) < ma_days:
+    if data is None or len(data) < ma_days:
         logging.info("{0}:样本小于{1}天...\n".format(code_name, ma_days))
         return False
 
@@ -77,9 +77,9 @@ def check_new(code_name, data, end_date=None, threshold=60):
 #   2019-01-29 新城控股
 #   2017-11-16 保利地产
 def check_volume(code_name, data, end_date=None, threshold=60):
-    # 流通市值不低于300亿
-    if code_name[2] < 3000000:
-        return False
+    # # 流通市值不低于300亿
+    # if code_name[2] < 3000000:
+    #     return False
 
     data['vol_ma5'] = pd.Series(tl.MA(data['volume'].values, 5), index=data.index.values)
     if end_date is not None:
@@ -103,8 +103,8 @@ def check_volume(code_name, data, end_date=None, threshold=60):
 
     amount = last_close * last_vol * 100
 
-    # 成交额不低于3亿
-    if amount < 300000000:
+    # 成交额不低于2亿
+    if amount < 200000000:
         return False
 
     data = data.head(n=threshold)

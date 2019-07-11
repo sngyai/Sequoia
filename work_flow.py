@@ -29,8 +29,8 @@ def process():
     strategies = {
         '海龟交易法则': turtle_trade.check_enter,
         '放量上涨': enter.check_volume,
-        '停机坪': parking_apron.check,
-        '回踩年线': backtrace_ma250.check,
+        # '停机坪': parking_apron.check,
+        # '回踩年线': backtrace_ma250.check,
     }
 
     for strategy, strategy_func in strategies.items():
@@ -53,12 +53,14 @@ def check(stocks, strategy, strategy_func):
 def check_enter(end_date=None, strategy_fun=enter.check_volume):
     def end_date_filter(code_name):
         data = utils.read_data(code_name)
-        result = strategy_fun(code_name, data, end_date=end_date)
+        if data is None:
+            return False
+        else:
+            return strategy_fun(code_name, data, end_date=end_date)
         # if result:
         #     message = turtle_trade.calculate(code_name, data)
         #     logging.info("{0} {1}".format(code_name, message))
         #     notice.push("{0} {1}".format(code_name, message))
-        return result
 
     return end_date_filter
 

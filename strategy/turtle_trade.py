@@ -19,6 +19,8 @@ def check_enter(code_name, data, end_date=None, threshold=60):
     if end_date is not None:
         mask = (data['date'] <= end_date)
         data = data.loc[mask]
+    if data is None:
+        return False
     data = data.tail(n=threshold)
     if len(data) < threshold:
         return False

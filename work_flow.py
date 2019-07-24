@@ -8,11 +8,13 @@ from strategy import backtrace_ma250
 from strategy import breakthrough_platform
 from strategy import parking_apron
 from strategy import low_atr
+from strategy import keep_increasing
 import tushare as ts
 import notice
 import logging
 import db
 import time
+import datetime
 
 
 def process():
@@ -29,10 +31,14 @@ def process():
     strategies = {
         '海龟交易法则': turtle_trade.check_enter,
         '放量上涨': enter.check_volume,
+        # '均线多头': keep_increasing.check,
         # '停机坪': parking_apron.check,
         # '回踩年线': backtrace_ma250.check,
     }
 
+    if datetime.datetime.now().weekday() == 2:
+        strategies['均线多头'] = keep_increasing.check
+    print(list(strategies))
     for strategy, strategy_func in strategies.items():
         check(stocks, strategy, strategy_func)
         time.sleep(2)

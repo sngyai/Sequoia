@@ -112,7 +112,7 @@ def check_volume(code_name, data, end_date=None, threshold=60):
     mean_vol = data.iloc[-1]['vol_ma5']
 
     vol_ratio = last_vol / mean_vol
-    if vol_ratio >= 1.8:
+    if vol_ratio >= 5:
         msg = "*{0}\n量比：{1:.2f}\t涨幅：{2}%\n".format(code_name, vol_ratio, p_change)
         logging.info(msg)
         return True

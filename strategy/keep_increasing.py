@@ -16,7 +16,7 @@ def check(code_name, data, end_date=None, threshold=60):
     begin_date = data.iloc[0].date
     if end_date is not None:
         if end_date < begin_date:  # 该股票在end_date时还未上市
-            logging.info("{}在{}时还未上市".format(code_name, end_date))
+            logging.debug("{}在{}时还未上市".format(code_name, end_date))
             return False
 
     if end_date is not None:

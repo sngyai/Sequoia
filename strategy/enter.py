@@ -14,7 +14,7 @@ def check_breakthrough(code_name, data, end_date=None, threshold=30):
         data = data.loc[mask]
     data = data.tail(n=threshold+1)
     if len(data) < threshold + 1:
-        logging.info("{0}:样本小于{1}天...\n".format(code_name, threshold))
+        logging.debug("{0}:样本小于{1}天...\n".format(code_name, threshold))
         return False
 
     # 最后一天收市价
@@ -38,7 +38,7 @@ def check_breakthrough(code_name, data, end_date=None, threshold=30):
 # 收盘价高于N日均线
 def check_ma(code_name, data, end_date=None, ma_days=250):
     if data is None or len(data) < ma_days:
-        logging.info("{0}:样本小于{1}天...\n".format(code_name, ma_days))
+        logging.debug("{0}:样本小于{1}天...\n".format(code_name, ma_days))
         return False
 
     ma_tag = 'ma' + str(ma_days)
@@ -47,7 +47,7 @@ def check_ma(code_name, data, end_date=None, ma_days=250):
     begin_date = data.iloc[0].date
     if end_date is not None:
         if end_date < begin_date:  # 该股票在end_date时还未上市
-            logging.info("{}在{}时还未上市".format(code_name, end_date))
+            logging.debug("{}在{}时还未上市".format(code_name, end_date))
             return False
     if end_date is not None:
         mask = (data['date'] <= end_date)
@@ -93,7 +93,7 @@ def check_volume(code_name, data, end_date=None, threshold=60):
         return False
     data = data.tail(n=threshold + 1)
     if len(data) < threshold + 1:
-        logging.info("{0}:样本小于{1}天...\n".format(code_name, threshold))
+        logging.debug("{0}:样本小于{1}天...\n".format(code_name, threshold))
         return False
 
     # 最后一天收盘价
@@ -114,7 +114,7 @@ def check_volume(code_name, data, end_date=None, threshold=60):
     vol_ratio = last_vol / mean_vol
     if vol_ratio >= 5:
         msg = "*{0}\n量比：{1:.2f}\t涨幅：{2}%\n".format(code_name, vol_ratio, p_change)
-        logging.info(msg)
+        logging.debug(msg)
         return True
     else:
         return False
@@ -130,7 +130,7 @@ def check_continuous_volume(code_name, data, end_date=None, threshold=60, window
         data = data.loc[mask]
     data = data.tail(n=threshold + window_size)
     if len(data) < threshold + window_size:
-        logging.info("{0}:样本小于{1}天...\n".format(code_name, threshold+window_size))
+        logging.debug("{0}:样本小于{1}天...\n".format(code_name, threshold+window_size))
         return False
 
     # 最后一天收盘价
@@ -148,5 +148,5 @@ def check_continuous_volume(code_name, data, end_date=None, threshold=60, window
             return False
 
     msg = "*{0} 量比：{1:.2f}\n\t收盘价：{2}\n".format(code_name, last_vol/mean_vol, last_close)
-    logging.info(msg)
+    logging.debug(msg)
     return True

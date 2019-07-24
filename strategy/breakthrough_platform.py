@@ -9,15 +9,15 @@ from strategy import enter
 # 平台突破策略
 def check(code_name, data, end_date=None, threshold=60):
     origin_data = data
-    if len(data) < 250:
-        logging.debug("{0}:样本小于250天...\n".format(code_name))
+    if len(data) < threshold:
+        logging.debug("{0}:样本小于{1}天...\n".format(code_name, threshold))
         return
     data['ma60'] = pd.Series(tl.MA(data['close'].values, 60), index=data.index.values)
 
     begin_date = data.iloc[0].date
     if end_date is not None:
         if end_date < begin_date:  # 该股票在end_date时还未上市
-            logging.info("{}在{}时还未上市".format(code_name, end_date))
+            logging.debug("{}在{}时还未上市".format(code_name, end_date))
             return False
 
     if end_date is not None:

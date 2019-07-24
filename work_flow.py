@@ -36,9 +36,9 @@ def process():
         # '回踩年线': backtrace_ma250.check,
     }
 
-    if datetime.datetime.now().weekday() == 2:
+    if datetime.datetime.now().weekday() == 0:
         strategies['均线多头'] = keep_increasing.check
-    print(list(strategies))
+
     for strategy, strategy_func in strategies.items():
         check(stocks, strategy, strategy_func)
         time.sleep(2)

@@ -13,7 +13,7 @@ def check(code_name, data, end_date=None, threshold=15):
     begin_date = data.iloc[0].date
     if end_date is not None:
         if end_date < begin_date:  # 该股票在end_date时还未上市
-            logging.info("{}在{}时还未上市".format(code_name, end_date))
+            logging.debug("{}在{}时还未上市".format(code_name, end_date))
             return False
 
     if end_date is not None:
@@ -21,7 +21,7 @@ def check(code_name, data, end_date=None, threshold=15):
         data = data.loc[mask]
 
     if len(data) < threshold:
-        logging.info("{0}:样本小于{1}天...\n".format(code_name, threshold))
+        logging.debug("{0}:样本小于{1}天...\n".format(code_name, threshold))
         return
 
     data = data.tail(n=threshold)
@@ -36,7 +36,7 @@ def check(code_name, data, end_date=None, threshold=15):
                     if check_internal(code_name, data, row):
                         flag = True
         except KeyError as error:
-            logging.info("{}处理异常：{}".format(code_name, error))
+            logging.debug("{}处理异常：{}".format(code_name, error))
 
     return flag
 
@@ -67,9 +67,9 @@ def check_internal(code_name, data, limitup_row):
                     and row['close'] > limitup_price and row['open'] > limitup_price):
                 return False
         except KeyError as error:
-            logging.info("{}处理异常：{}".format(code_name, error))
+            logging.debug("{}处理异常：{}".format(code_name, error))
 
-    logging.info("股票{0} 涨停日期：{1}".format(code_name, limitup_row['date']))
+    logging.debug("股票{0} 涨停日期：{1}".format(code_name, limitup_row['date']))
 
     return True
 

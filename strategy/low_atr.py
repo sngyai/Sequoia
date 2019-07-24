@@ -9,7 +9,7 @@ def check_low_increase(code_name, data, end_date=None, ma_short=30, ma_long=250,
     stock = code_name[0]
     name = code_name[1]
     if len(data) < ma_long:
-        logging.info("{0}:样本小于{1}天...\n".format(code_name, ma_long))
+        logging.debug("{0}:样本小于{1}天...\n".format(code_name, ma_long))
         return False
 
     data['ma_short'] = pd.Series(tl.MA(data['close'].values, ma_short), index=data.index.values)
@@ -22,7 +22,7 @@ def check_low_increase(code_name, data, end_date=None, ma_short=30, ma_long=250,
     inc_days = 0
     dec_days = 0
     if len(data) < threshold:
-        logging.info("{0}:样本小于{1}天...\n".format(code_name, threshold))
+        logging.debug("{0}:样本小于{1}天...\n".format(code_name, threshold))
         return False
 
     # 区间最低点
@@ -59,7 +59,7 @@ def check_low_increase(code_name, data, end_date=None, ma_short=30, ma_long=250,
     ratio = (highest_row['close'] - lowest_row['close']) / lowest_row['close']
 
     if ratio > 1.1:
-        logging.info("股票：{0}（{1}）  最低:{2}, 最高:{3}, 涨跌比率:{4}       上涨天数:{5}， 下跌天数:{6}".format(name, stock, lowest_row['date'], highest_row['date'], ratio, inc_days, dec_days))
+        logging.debug("股票：{0}（{1}）  最低:{2}, 最高:{3}, 涨跌比率:{4}       上涨天数:{5}， 下跌天数:{6}".format(name, stock, lowest_row['date'], highest_row['date'], ratio, inc_days, dec_days))
         return True
 
     return False

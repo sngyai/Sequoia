@@ -46,7 +46,7 @@ def check_exit(code_name, data, end_date=None, threshold=10):
         data = data.loc[mask]
     data = data.tail(n=threshold)
     if len(data) < threshold:
-        logging.info("{0}:样本小于{1}天...\n".format(code_name, threshold))
+        logging.debug("{0}:样本小于{1}天...\n".format(code_name, threshold))
         return False
     for index, row in data.iterrows():
         if row['close'] < min_price:
@@ -85,7 +85,7 @@ def calculate(code_name, data, end_date=None, threshold=20):
     begin_date = data.iloc[0].date
     if end_date is not None:
         if end_date < begin_date:  # 该股票在end_date时还未上市
-            logging.info("{}在{}时还未上市".format(code_name, end_date))
+            logging.debug("{}在{}时还未上市".format(code_name, end_date))
             return False
 
     if end_date is not None:
@@ -93,7 +93,7 @@ def calculate(code_name, data, end_date=None, threshold=20):
         data = data.loc[mask]
 
     if len(data) < threshold:
-        logging.info("{0}:样本小于{1}天...\n".format(code_name, threshold))
+        logging.debug("{0}:样本小于{1}天...\n".format(code_name, threshold))
         return False
 
     atr_list = tl.ATR(data['high'], data['low'], data['close'], timeperiod=threshold)

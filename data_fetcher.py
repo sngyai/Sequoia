@@ -37,7 +37,7 @@ def init_data(code_name):
     data = ts.get_k_data(stock, autype='qfq')
 
     if data is None or data.empty:
-        logging.info("股票："+stock+" 没有数据，略过...")
+        logging.debug("股票："+stock+" 没有数据，略过...")
         return
 
     data['p_change'] = tl.ROC(data['close'], 1)

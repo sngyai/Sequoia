@@ -70,10 +70,11 @@ def check_new(code_name, data, end_date=None, threshold=60):
         return False
 
 
-# 量比大于2.5
+# 量比大于2
 # 例如：
 #   2017-09-26 2019-02-11 京东方A
 #   2019-03-22 浙江龙盛
+#   2019-02-13 汇顶科技
 #   2019-01-29 新城控股
 #   2017-11-16 保利地产
 def check_volume(code_name, data, end_date=None, threshold=60):
@@ -112,7 +113,7 @@ def check_volume(code_name, data, end_date=None, threshold=60):
     mean_vol = data.iloc[-1]['vol_ma5']
 
     vol_ratio = last_vol / mean_vol
-    if vol_ratio >= 5:
+    if vol_ratio >= 2:
         msg = "*{0}\n量比：{1:.2f}\t涨幅：{2}%\n".format(code_name, vol_ratio, p_change)
         logging.debug(msg)
         return True

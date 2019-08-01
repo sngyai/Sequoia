@@ -15,14 +15,21 @@ import logging
 import db
 import time
 import datetime
+import urllib
+import settings
+import pandas as pd
 
 
 def process():
     logging.info("************************ process start ***************************************")
-    all_data = ts.get_today_all()
-    subset = all_data[['code', 'name', 'nmc']]
-    stocks = [tuple(x) for x in subset.values]
+    try:
+        all_data = ts.get_today_all()
+        subset = all_data[['code', 'name', 'nmc']]
+        subset.to_csv(settings.STOCKS_FILE, index=None, header=True)
+    except urllib.error.URLError as e:
+        subset = pd.read_csv(settings.STOCKS_FILE)
 
+    stocks = [tuple(x) for x in subset.values]
     if utils.need_update_data():
         utils.prepare()
         data_fetcher.run(stocks)

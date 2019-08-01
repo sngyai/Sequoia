@@ -32,7 +32,7 @@
     $ make
     $ sudo make install
     ```
- ### Python2.7或3.5以上
+ ### 推荐使用Python3.5以上以及pip3
  ### Python 依赖:
  ```
  pip install -r requirements.txt 

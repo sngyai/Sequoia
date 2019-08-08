@@ -28,6 +28,7 @@ def process():
         subset.to_csv(settings.STOCKS_FILE, index=None, header=True)
     except urllib.error.URLError as e:
         subset = pd.read_csv(settings.STOCKS_FILE)
+        subset['code'] = subset['code'].astype(str)
 
     stocks = [tuple(x) for x in subset.values]
     if utils.need_update_data():
@@ -36,8 +37,9 @@ def process():
         check_exit()
 
     strategies = {
-        '海龟交易法则': turtle_trade.check_enter,
-        '放量上涨': enter.check_volume,
+        '突破平台': breakthrough_platform.check,
+        # '海龟交易法则': turtle_trade.check_enter,
+        # '放量上涨': enter.check_volume,
         # '均线多头': keep_increasing.check,
         # '停机坪': parking_apron.check,
         # '回踩年线': backtrace_ma250.check,

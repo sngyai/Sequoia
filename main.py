@@ -8,7 +8,6 @@ import schedule
 import time
 
 logging.basicConfig(format='%(asctime)s %(message)s', filename='sequoia.log')
-
 logging.getLogger().setLevel(logging.INFO)
 
 # def job():

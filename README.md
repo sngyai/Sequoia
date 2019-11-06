@@ -4,7 +4,7 @@
 
 另，由于TuShare的增量更新接口有bug（最近一个交易日的数据获取不到），所以每次计算前都是删除所有数据，全部重新获取。
 
-本程序实现了若干种选股策略，大家可以自行选择其中的一到多种策略组合使用，参见[work_flow.py](https://github.com/sngyai/Sequoia/blob/master/work_flow.py#L31-L37)
+本程序实现了若干种选股策略，大家可以自行选择其中的一到多种策略组合使用，参见[work_flow.py](https://github.com/sngyai/Sequoia/blob/master/work_flow.py#L41-L48)
 
 各策略中的`end_date`参数主要用于回测。
 

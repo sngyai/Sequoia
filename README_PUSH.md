@@ -74,12 +74,13 @@ git clone https://github.com/inputmice/Conversations.git
 
 * 编译APK
 
-Android Studio打开
-打开`build.gradle`
-注释掉
+使用Android Studio导入项目
+
+打开`build.gradle`，注释掉
 ```
 implementation fileTree(include: ['libwebrtc-m90.aar'], dir: 'libs')
 ```
+
 添加
 ```
 implementation 'org.webrtc:google-webrtc:1.0.32006'

@@ -33,6 +33,7 @@ ca_file: "/home/ubuntu/ejabberd-21.07/conf/ca.pem"
 ```
 
 * 启动服务
+
 在安装路径下执行
 ```
 ./bin/ejabberdctl start
@@ -43,6 +44,7 @@ tail -f logs/error.log
 ```
 
 * 添加账号
+
 ```
 bin/ejabberdctl register ${admin} ${域名} ${管理员自定义密码}
 ```
@@ -54,14 +56,20 @@ bin/ejabberdctl register ${user} ${域名} ${用户自定义密码}
 ```
 
 * 登录后台管理
+
 访问${域名}:5280/admin，输入注册管理员账号时候的用户名密码(上面的${admin}和${自定义密码})
 
 
 ## 手机端
+
 * 下载源码 
+
 ```
 git clone https://github.com/inputmice/Conversations.git
 ```
+
+* 编译APK
+
 Android Studio打开
 打开`build.gradle`
 注释掉

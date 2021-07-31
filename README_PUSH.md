@@ -6,6 +6,7 @@
 * 客户端：Android手机
 
 ## 服务器端
+
 * 安装ejabberd
 ```
 wget https://static.process-one.net/ejabberd/downloads/21.07/ejabberd-21.07-linux-x64.run
@@ -14,6 +15,7 @@ chmod +x ejabberd-21.07-linux-x64.run
 安装过程需要一系列的配置，需要特别关注的地方包括安装路径，管理员ID
 
 * 启用SSL（Conversations客户端要求的，就是这么蛋疼）
+
 从UCloud（或其他云服务商）处下载原始证书，包括三个文件`ca.cert`、`private.key`、`public.crt`
 ```
 cp ca.cert ca.pem

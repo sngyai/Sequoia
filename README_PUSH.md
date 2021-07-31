@@ -35,10 +35,13 @@ ca_file: "/home/ubuntu/ejabberd-21.07/conf/ca.pem"
 * 启动服务
 
 在安装路径下执行
+
 ```
-./bin/ejabberdctl start
+bin/ejabberdctl start
 ```
+
 查看日志有无error
+
 ```
 tail -f logs/error.log
 ```
@@ -48,6 +51,7 @@ tail -f logs/error.log
 ```
 bin/ejabberdctl register ${admin} ${域名} ${管理员自定义密码}
 ```
+
 其中admin对应安装引导中设置的管理员，后面会用到；
 注册普通账号命令相同
 

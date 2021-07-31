@@ -19,7 +19,7 @@ chmod +x ejabberd-21.07-linux-x64.run
 从UCloud（或其他云服务商）处下载原始证书，包括三个文件`ca.cert`、`private.key`、`public.crt`
 ```
 cp ca.cert ca.pem
-cat private.key public.crt > ejabberd.pem
+cat ca.cert private.key public.crt > ejabberd.pem
 ```
 上传`ca.pem`与`ejabberd.pem`到服务器端，放到ejabberd安装路径下的conf目录
 修改conf/ejabberd.yml中的`certfiles`与`ca_file`

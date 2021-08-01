@@ -14,9 +14,11 @@ chmod +x ejabberd-21.07-linux-x64.run
 ```
 安装过程需要一系列的配置，需要特别关注的地方包括安装路径，管理员ID
 
-* 启用SSL（Conversations客户端要求的，就是这么蛋疼）
+* 使用域名，启用SSL
 
-从UCloud（或其他云服务商）处下载原始证书，包括三个文件`ca.cert`、`private.key`、`public.crt`
+自行去云服务商注册域名和申请证书，过程可以参考 [域名注册](https://docs.ucloud.cn/udnr/operate/register) 以及 [证书快速申请流程指南](https://docs.ucloud.cn/ussl/operate/simple) ，本例中域名为`example.com`。
+
+下载证书，以UCloud下载的原始证书为例，其中包括三个文件`ca.cert`、`private.key`、`public.crt`
 ```
 cp ca.cert ca.pem
 cat ca.cert private.key public.crt > ejabberd.pem
@@ -31,6 +33,8 @@ certfiles:
 ```
 ca_file: "/home/ubuntu/ejabberd-21.07/conf/ca.pem"
 ```
+
+其中的`/home/ubuntu/ejabberd-21.07/`为ejabberd安装路径
 
 * 启动服务
 
@@ -49,19 +53,19 @@ tail -f logs/error.log
 * 添加账号
 
 ```
-bin/ejabberdctl register ${admin} ${域名} ${管理员自定义密码}
+bin/ejabberdctl register ${admin} example.com ${管理员自定义密码}
 ```
 
 其中admin对应安装引导中设置的管理员，后面会用到；
 注册普通账号命令相同
 
 ```
-bin/ejabberdctl register ${user} ${域名} ${用户自定义密码}
+bin/ejabberdctl register ${user} example.com ${用户自定义密码}
 ```
 
 * 登录后台管理
 
-浏览器访问`http://${域名}:5280/admin`，输入注册管理员账号时候的用户名密码(上面的${admin}和${自定义密码})
+浏览器访问`http://example.com:5280/admin`，输入注册管理员账号时候的用户名密码(上面的${admin}和${自定义密码})
 
 
 ## 手机端
@@ -90,9 +94,36 @@ implementation 'org.webrtc:google-webrtc:1.0.32006'
 
 ## 运行手机App
 打开Conversations，点击“我已有帐户”
-`XMPP地址`填`${user}@${域名}`，密码填`${用户自定义密码}`
+`XMPP地址`填`${user}@example.com`，密码填`${用户自定义密码}`
 
 没有意外就登录成功了，可以再添加个账户，两个账户在手机上互撩体验一下
 
-（未完待续）
+## 调用ejabberd ReST API推送消息
+参考官方文档[api/send_message](https://docs.ejabberd.im/developer/ejabberd-api/admin-api/#send-message)
+
+可以使用Postman调用调试通过后，直接生成Python代码：
+```python
+import http.client
+import json
+
+conn = http.client.HTTPSConnection("example.com", 5443)
+payload = json.dumps({
+  "type": "headline",
+  "from": "admin@example.com",
+  "to": "sngyai@example.com",
+  "subject": "investing",
+  "body": "测试一下"
+})
+headers = {
+  'Authorization': 'Basic ${AuthToken}',
+  'Content-Type': 'application/json'
+}
+conn.request("POST", "/api/send_message", payload, headers)
+res = conn.getresponse()
+data = res.read()
+print(data.decode("utf-8"))
+```
+
+其中的`Authorization`做了处理，需要替换成自己在上文“添加账号”部分注册的管理员账户的用户名和密码
+
 

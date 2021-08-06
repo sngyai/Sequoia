@@ -10,7 +10,7 @@ from strategy import parking_apron
 from strategy import low_backtrace_increase
 from strategy import keep_increasing
 import tushare as ts
-import notice
+import push
 import logging
 import db
 import time
@@ -25,18 +25,18 @@ def process():
     try:
         all_data = ts.get_today_all()
         subset = all_data[['code', 'name', 'nmc']]
-        subset.to_csv(settings.STOCKS_FILE, index=None, header=True)
+        subset.to_csv(settings.config['stocks_file'], index=None, header=True)
         stocks = [tuple(x) for x in subset.values]
         statistics(all_data, stocks)
     except urllib.error.URLError as e:
-        subset = pd.read_csv(settings.STOCKS_FILE)
+        subset = pd.read_csv(settings.config['stocks_file'])
         subset['code'] = subset['code'].astype(str)
         stocks = [tuple(x) for x in subset.values]
 
-    # if utils.need_update_data():
-    #     utils.prepare()
-    #     data_fetcher.run(stocks)
-    #     check_exit()
+    if utils.need_update_data():
+        utils.prepare()
+        data_fetcher.run(stocks)
+        check_exit()
 
     strategies = {
         '海龟交易法则': turtle_trade.check_enter,
@@ -62,9 +62,7 @@ def check(stocks, strategy, strategy_func):
     end = None
     m_filter = check_enter(end_date=end, strategy_fun=strategy_func)
     results = list(filter(m_filter, stocks))
-
-    logging.info('**************"{0}"**************\n{1}\n**************"{0}"**************\n'.format(strategy, results))
-    notice.strategy('**************"{0}"**************\n{1}\n**************"{0}"**************\n'.format(strategy, results))
+    push.strategy('**************"{0}"**************\n{1}\n**************"{0}"**************\n'.format(strategy, results))
 
 
 def check_enter(end_date=None, strategy_fun=enter.check_volume):
@@ -76,8 +74,7 @@ def check_enter(end_date=None, strategy_fun=enter.check_volume):
             return strategy_fun(code_name, data, end_date=end_date)
         # if result:
         #     message = turtle_trade.calculate(code_name, data)
-        #     logging.info("{0} {1}".format(code_name, message))
-        #     notice.push("{0} {1}".format(code_name, message))
+        #     push.strategy("{0} {1}".format(code_name, message))
 
     return end_date_filter
 
@@ -98,8 +95,7 @@ def statistics(all_data, stocks):
 
     msg = "涨停数：{}   跌停数：{}\n涨幅大于5%数：{}  跌幅大于5%数：{}\n年线以上个股数量：    {}"\
         .format(limitup, limitdown, up5, down5, ma250_count)
-    logging.info(msg)
-    notice.statistics(msg)
+    push.statistics(msg)
 
 
 def check_exit():
@@ -109,12 +105,10 @@ def check_exit():
         code_name = file[key]['code_name']
         data = utils.read_data(code_name)
         if turtle_trade.check_exit(code_name, data):
-            notice.strategy("{0} 达到退出条件".format(code_name))
-            logging.info("{0} 达到退出条件".format(code_name))
+            push.strategy("{0} 达到退出条件".format(code_name))
             del file[key]
         elif turtle_trade.check_stop(code_name, data, file[key]):
-            notice.strategy("{0} 达到止损条件".format(code_name))
-            logging.info("{0} 达到止损条件".format(code_name))
+            push.strategy("{0} 达到止损条件".format(code_name))
             del file[key]
 
     file.close()

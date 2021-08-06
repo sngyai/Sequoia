@@ -20,7 +20,7 @@ def get_stocks(config=None):
         names = table.col_values(1)[1:rows_count-1]
         return list(zip(codes, names))
     else:
-        data_files = os.listdir(settings.DATA_DIR)
+        data_files = os.listdir(settings.config['data_dir'])
         stocks = []
         for file in data_files:
             code_name = file.split(".")[0]
@@ -32,8 +32,8 @@ def get_stocks(config=None):
 
 
 def clean_files():
-    for the_file in os.listdir(settings.DATA_DIR):
-        file_path = os.path.join(settings.DATA_DIR, the_file)
+    for the_file in os.listdir(settings.config['data_dir']):
+        file_path = os.path.join(settings.config['data_dir'], the_file)
         try:
             if os.path.isfile(file_path):
                 os.unlink(file_path)
@@ -46,8 +46,8 @@ def read_data(code_name):
     stock = code_name[0]
     name = code_name[1]
     file_name = stock + '-' + name + '.h5'
-    if os.path.exists(settings.DATA_DIR + "/" + file_name):
-        return pd.read_hdf(settings.DATA_DIR + "/" + file_name)
+    if os.path.exists(settings.config['data_dir'] + "/" + file_name):
+        return pd.read_hdf(settings.config['data_dir'] + "/" + file_name)
     else:
         return
 
@@ -79,7 +79,7 @@ def next_weekday(date):
 
 
 def prepare():
-    dirs = [settings.DATA_DIR, settings.DB_DIR]
+    dirs = [settings.config['data_dir'], settings.config['db_dir']]
     for dir in dirs:
         if os.path.exists(dir):
             clean_files()

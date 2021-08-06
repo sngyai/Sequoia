@@ -3,6 +3,7 @@
 import talib as tl
 import pandas as pd
 import logging
+import push
 from strategy import enter
 
 
@@ -43,8 +44,7 @@ def check(code_name, data, end_date=None, threshold=60):
         if not (-0.05 < (row['ma60'] - row['close']) / row['ma60'] < 0.2):
             return False
 
-    logging.info("股票{0} 突破日期：{1}".format(code_name, breakthrough_row['date']))
-
+    push.strategy("股票{0} 突破日期：{1}".format(code_name, breakthrough_row['date']))
     return True
 
 

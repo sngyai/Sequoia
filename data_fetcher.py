@@ -58,6 +58,6 @@ def run(stocks):
                 data['code'] = data['code'].apply(lambda x: str(x))
                 if data is not None:
                     file_name = stock[0] + '-' + stock[1] + '.h5'
-                    data.to_hdf(settings.DATA_DIR + "/" + file_name, 'data', append=append_mode, format='table')
+                    data.to_hdf(settings.config['data_dir'] + "/" + file_name, 'data', append=append_mode, format='table')
             except Exception as exc:
                 print('%s(%r) generated an exception: %s' % (stock[1], stock[0], exc))

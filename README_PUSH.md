@@ -110,7 +110,7 @@ conn = http.client.HTTPSConnection("example.com", 5443)
 payload = json.dumps({
   "type": "headline",
   "from": "admin@example.com",
-  "to": "sngyai@example.com",
+  "to": "user@example.com",
   "subject": "investing",
   "body": "测试一下"
 })

@@ -4,6 +4,8 @@ import talib as tl
 import pandas as pd
 import logging
 from datetime import datetime, timedelta
+import push
+
 
 # 使用示例：result = backtrace_ma250.check(code_name, data, end_date=end_date)
 # 如：当end_date='2019-02-01'，输出选股结果如下：
@@ -80,6 +82,6 @@ def check(code_name, data, end_date=None, threshold=60):
     if not (vol_ratio > 2 and back_ratio < 0.8) :
         return False
 
-    logging.info("{0} 回撤幅度: {1}".format(code_name, 1 - back_ratio))
+    push.strategy("{0} 回撤幅度: {1}".format(code_name, 1 - back_ratio))
     return True
 

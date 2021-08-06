@@ -77,7 +77,7 @@ Twisted==18.9.0
 ubuntu-advantage-tools==20.3
 ufw==0.36
 unattended-upgrades==0.1
-urllib3==1.25.11
+urllib3==1.26.5
 wadllib==1.3.3
 websocket-client==0.57.0
 xlrd==1.2.0

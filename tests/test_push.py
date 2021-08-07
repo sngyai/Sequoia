@@ -18,5 +18,5 @@ def test_strategy():
     strategy("1")
 
 
-logging.basicConfig(format='%(asctime)s %(message)s', filename='sequoia.log')
+logging.basicConfig(format='%(asctime)s %(message)s', filename='../sequoia.log')
 logging.getLogger().setLevel(logging.INFO)

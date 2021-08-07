@@ -93,37 +93,12 @@ implementation 'org.webrtc:google-webrtc:1.0.32006'
 点击Android Studio菜单`Build`、`Generate Signed Bundle/APK...`，生成后会提示APK所在目录，传到手机安装
 
 ## 运行手机App
+
 打开Conversations，点击“我已有帐户”
 `XMPP地址`填`${user}@example.com`，密码填`${用户自定义密码}`
 
 没有意外就登录成功了，可以再添加个账户，两个账户在手机上互撩体验一下
 
 ## 调用ejabberd ReST API推送消息
-参考官方文档[api/send_message](https://docs.ejabberd.im/developer/ejabberd-api/admin-api/#send-message)
 
-可以使用Postman调用调试通过后，直接生成Python代码：
-```python
-import http.client
-import json
-
-conn = http.client.HTTPSConnection("example.com", 5443)
-payload = json.dumps({
-  "type": "headline",
-  "from": "admin@example.com",
-  "to": "user@example.com",
-  "subject": "investing",
-  "body": "测试一下"
-})
-headers = {
-  'Authorization': 'Basic ${AuthToken}',
-  'Content-Type': 'application/json'
-}
-conn.request("POST", "/api/send_message", payload, headers)
-res = conn.getresponse()
-data = res.read()
-print(data.decode("utf-8"))
-```
-
-其中的`Authorization`做了处理，需要替换成自己在上文“添加账号”部分注册的管理员账户的用户名和密码
-
-
+根据上述配置，修改[config.yaml](config.yaml)中的`push`相关配置

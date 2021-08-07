@@ -44,21 +44,20 @@
 $ python main.py
 ```
 运行结果查看日志文件[sequoia.log](sequoia.log)
-也可参考[notice.py](push.py)模块，自行实现推送相关的功能
 
 ### 服务器端运行
 用户也可以将本程序作为定时任务运行在服务端，需要做以下工作：
-* 注释掉[main.py](https://github.com/sngyai/Sequoia/blob/master/main.py#L26-L27)的L26-L27；
-* 打开[main.py](https://github.com/sngyai/Sequoia/blob/master/main.py#L13-L24)中L13-L24的注释；
-* 在[notice.py](push.py)模块中实现自己的推送功能，每天定时将选股结果推送到手机上。服务端推荐使用[ejabberd](https://github.com/processone/ejabberd)，客户端Android推荐使用[Conversations](https://github.com/siacs/Conversations)，iOS没有开发者证书的话推送不了，有证书推荐使用[ChatSecure-iOS
-](https://github.com/ChatSecure/ChatSecure-iOS)，我采用的推送方案是`ejabberd`搭配`Conversations`。
+* 将[config.yaml](config.yaml)中的`cron`配置改为`true`，`push`.`enable`改为true
+* 参考[README_PUSH.md](README_PUSH.md)文档搭建 [ejabberd](https://github.com/processone/ejabberd) 推送服务
+* 客户端Android推荐使用 [Conversations](https://github.com/siacs/Conversations) ，iOS没有开发者证书的话推送不了，有证书推荐使用 [ChatSecure-iOS
+](https://github.com/ChatSecure/ChatSecure-iOS) ，我采用的推送方案是`ejabberd`搭配`Conversations`。
 效果如图
 
 ![statistics](images/statistics.jpg?raw=true "统计信息") ![strategy](images/strategy.jpg?raw=true "策略选股")
 
 ## 如何回测
 
-修改[work_flow.py#L61](https://github.com/sngyai/Sequoia/blob/master/work_flow.py#L61)中`end`为指定日期，格式为`'YYYY-MM-DD'`，如：
+修改 [work_flow.py#L61](https://github.com/sngyai/Sequoia/blob/master/work_flow.py#L61) 中`end`为指定日期，格式为`'YYYY-MM-DD'`，如：
 ```
 end = '2019-06-17'
 ```

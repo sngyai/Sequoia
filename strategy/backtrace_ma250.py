@@ -82,6 +82,5 @@ def check(code_name, data, end_date=None, threshold=60):
     if not (vol_ratio > 2 and back_ratio < 0.8) :
         return False
 
-    push.strategy("{0} 回撤幅度: {1}".format(code_name, 1 - back_ratio))
     return True
 

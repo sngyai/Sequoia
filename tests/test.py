@@ -1,5 +1,5 @@
 # -*- encoding: UTF-8 -*-
-
+import strategy.high_tight_flag
 import utils
 from talib import ATR
 import strategy.enter as enter
@@ -30,14 +30,14 @@ settings.init()
 # code_name = ('600145', '*ST新亿')
 # code_name = ('601700', '风范股份')
 # code_name = ('000725', '京东方Ａ')
-code_name = ('002157', '正邦科技')
+code_name = ('300437', '清水源')
 # code_name = ('300663', '科蓝软件')
 # end = '2017-09-26'
-end = '2019-02-15'
+end = '2021-10-13'
 
 data = utils.read_data(code_name)
 # print(data)
-result = enter.check_volume(code_name, data, end_date=end)
+result = strategy.high_tight_flag.check(code_name, data, end_date=end)
 print("low atr check {0}'s result: {1}".format(code_name, result))
 #
 # rolling_window = 21

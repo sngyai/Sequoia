@@ -37,7 +37,12 @@
  ```
  pip install -r requirements.txt 
  ```
- 
+
+## 生成配置文件
+
+```
+cp config.yaml.example config.yaml
+```
 ## 运行
 ### 本地运行
 ```

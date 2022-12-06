@@ -6,3 +6,4 @@
 /sequoia.log
 *.pyc
 .DS_Store
+storage/Positions

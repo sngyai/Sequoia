@@ -46,7 +46,8 @@ def read_data(code_name):
     stock = code_name[0]
     name = code_name[1]
     file_name = stock + '-' + name + '.h5'
-    if os.path.exists(settings.config['data_dir'] + "/" + file_name):
+    f = settings.config['data_dir'] + "/" + file_name
+    if os.path.exists(f):
         return pd.read_hdf(settings.config['data_dir'] + "/" + file_name)
     else:
         return

@@ -3,7 +3,7 @@
 import data_fetcher
 import utils
 import strategy.enter as enter
-from strategy import turtle_trade
+from strategy import turtle_trade, climax_limitdown
 from strategy import backtrace_ma250
 from strategy import breakthrough_platform
 from strategy import parking_apron
@@ -46,6 +46,7 @@ def process():
         # '停机坪': parking_apron.check,
         # '回踩年线': backtrace_ma250.check,
         '高而窄的旗形': high_tight_flag.check,
+        '放量跌停': climax_limitdown.check,
         # '突破平台': breakthrough_platform.check,
         # '无大幅回撤': low_backtrace_increase.check,
     }
@@ -64,7 +65,8 @@ def check(stocks, strategy, strategy_func):
     end = None
     m_filter = check_enter(end_date=end, strategy_fun=strategy_func)
     results = list(filter(m_filter, stocks))
-    push.strategy('**************"{0}"**************\n{1}\n**************"{0}"**************\n'.format(strategy, results))
+    if len(results) > 0:
+        push.strategy('**************"{0}"**************\n{1}\n**************"{0}"**************\n'.format(strategy, results))
 
 
 def check_enter(end_date=None, strategy_fun=enter.check_volume):

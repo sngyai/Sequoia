@@ -15,3 +15,7 @@ def init():
     mask = (df['bcount'] > 1)  # 机构买入次数大于1
     df = df.loc[mask]
     top_list = df['code'].tolist()
+
+
+def config():
+    return config

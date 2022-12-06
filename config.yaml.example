@@ -6,7 +6,5 @@ stocks_file: "./storage/stocks.csv"
 
 push:
   enable: false
-  url: "https://example.com:5378/api/send_message"
-  admin: "admin@example.com"
-  admin_pass: "password"
-  user: "user@example.com"
+  wxpusher_uid: ""
+  wxpusher_token: ""

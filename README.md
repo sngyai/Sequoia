@@ -50,7 +50,7 @@ $ python main.py
 
 ### 服务器端运行
 用户也可以将本程序作为定时任务运行在服务端，需要做以下工作：
-* 将[config.yaml](config.yaml)中的`cron`配置改为`true`，`push`.`enable`改为true
+* 将[config.yaml](config.yaml.example)中的`cron`配置改为`true`，`push`.`enable`改为true
 * 使用[WxPusher](https://wxpusher.zjiecode.com/docs/#/)实现了微信推送，用户需要自行获取[wxpusher_token](https://wxpusher.zjiecode.com/docs/#/?id=%e8%8e%b7%e5%8f%96apptoken)和[wxpusher_uid](https://wxpusher.zjiecode.com/docs/#/?id=%e8%8e%b7%e5%8f%96uid)，并配置到`config.yaml`中去。
 ## 如何回测
 

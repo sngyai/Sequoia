@@ -1,6 +1,7 @@
 # -*- encoding: UTF-8 -*-
 
 import data_fetcher
+import settings
 import utils
 import strategy.enter as enter
 from strategy import turtle_trade, climax_limitdown
@@ -13,12 +14,8 @@ from strategy import high_tight_flag
 import akshare as ak
 import push
 import logging
-import db
 import time
 import datetime
-import urllib
-import settings
-import pandas as pd
 
 
 def prepare():
@@ -55,11 +52,11 @@ def process(stocks, strategies):
         time.sleep(2)
 
 def check(stocks_data, strategy, strategy_func):
-    end = None
+    end = settings.config['end_date']
     m_filter = check_enter(end_date=end, strategy_fun=strategy_func)
     results = dict(filter(m_filter, stocks_data.items()))
     if len(results) > 0:
-        push.strategy('**************"{0}"**************\n{1}\n**************"{0}"**************\n'.format(strategy, results))
+        push.strategy('**************"{0}"**************\n{1}\n**************"{0}"**************\n'.format(strategy, results.keys()))
 
 
 def check_enter(end_date=None, strategy_fun=enter.check_volume):
@@ -82,14 +79,7 @@ def statistics(all_data, stocks):
     up5 = len(all_data.loc[(all_data['涨跌幅'] >= 5)])
     down5 = len(all_data.loc[(all_data['涨跌幅'] <= -5)])
 
-    def ma250(stock):
-        stock_data = utils.read_data(stock)
-        return enter.check_ma(stock, stock_data)
-
-    ma250_count = len(list(filter(ma250, stocks)))
-
-    msg = "涨停数：{}   跌停数：{}\n涨幅大于5%数：{}  跌幅大于5%数：{}\n年线以上个股数量：    {}"\
-        .format(limitup, limitdown, up5, down5, ma250_count)
+    msg = "涨停数：{}   跌停数：{}\n涨幅大于5%数：{}  跌幅大于5%数：{}".format(limitup, limitdown, up5, down5)
     push.statistics(msg)
 
 

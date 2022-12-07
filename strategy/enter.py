@@ -73,10 +73,6 @@ def check_new(code_name, data, end_date=None, threshold=60):
 #   2019-01-29 新城控股
 #   2017-11-16 保利地产
 def check_volume(code_name, data, end_date=None, threshold=60):
-    # # 流通市值不低于300亿
-    # if code_name[2] < 3000000:
-    #     return False
-
     if len(data) < threshold:
         logging.debug("{0}:样本小于250天...\n".format(code_name))
         return False

@@ -1,8 +1,6 @@
 cron: false
 data_dir: "data"
-db_dir: "storage"
-stocks_file: "./storage/stocks.csv"
-
+end_date: '2019-06-17'
 
 push:
   enable: false

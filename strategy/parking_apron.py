@@ -1,7 +1,5 @@
 # -*- encoding: UTF-8 -*-
 
-import talib as tl
-import pandas as pd
 import logging
 from strategy import turtle_trade
 
@@ -36,13 +34,9 @@ def check(code_name, data, end_date=None, threshold=15):
 
 
 def check_internal(code_name, data, limitup_row):
-
     limitup_price = limitup_row['收盘']
-
     limitup_end = data.loc[(data['日期'] > limitup_row['日期'])]
-
     limitup_end = limitup_end.head(n=3)
-
     if len(limitup_end.index) < 3:
         return False
 

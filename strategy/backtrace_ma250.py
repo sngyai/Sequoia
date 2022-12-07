@@ -4,7 +4,6 @@ import talib as tl
 import pandas as pd
 import logging
 from datetime import datetime, timedelta
-import push
 
 
 # 使用示例：result = backtrace_ma250.check(code_name, data, end_date=end_date)

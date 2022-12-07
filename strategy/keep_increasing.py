@@ -3,7 +3,6 @@
 import talib as tl
 import pandas as pd
 import logging
-from strategy import turtle_trade
 
 
 # 持续上涨（MA30向上）

@@ -1,36 +1,10 @@
 # -*- encoding: UTF-8 -*-
 
-import tushare as ts
 import akshare as ak
-import pandas as pd
-import datetime
 import logging
-import settings
 import talib as tl
 
-import utils
-
 import concurrent.futures
-
-from pandas.tseries.offsets import *
-
-
-# def update_data(code_name):
-#     stock = code_name[0]
-#     old_data = utils.read_data(code_name)
-#     if not old_data.empty:
-#         start_time = utils.next_weekday(old_data.iloc[-1].date)
-#         current_time = datetime.datetime.now()
-#         if start_time > current_time:
-#             return
-#
-#         df = ts.get_k_data(stock, autype='qfq')
-#         mask = (df['日期'] >= start_time.strftime('%Y-%m-%d'))
-#         appender = df.loc[mask]
-#         if appender.empty:
-#             return
-#         else:
-#             return appender
 
 
 def fetch(code_name):

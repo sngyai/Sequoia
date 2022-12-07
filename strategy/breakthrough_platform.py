@@ -3,7 +3,6 @@
 import talib as tl
 import pandas as pd
 import logging
-import push
 from strategy import enter
 
 

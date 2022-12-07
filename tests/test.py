@@ -71,7 +71,7 @@ settings.init()
 # data = ts.get_stock_basics()
 # print(data)
 
-stocks = [('000001', 'Runoob', 1997),('000002','P','Q')]
+stocks = [('002728', '特一药业')]
 strategies = {
         '海龟交易法则': turtle_trade.check_enter,
         # '放量上涨': enter.check_volume,

@@ -21,20 +21,20 @@ import datetime
 def prepare():
     logging.info("************************ process start ***************************************")
     all_data = ak.stock_zh_a_spot_em()
-    subset = all_data[['代码', '名称', '总市值']]
+    subset = all_data[['代码', '名称']]
     stocks = [tuple(x) for x in subset.values]
     statistics(all_data, stocks)
 
     strategies = {
+        '放量上涨': enter.check_volume,
+        '均线多头': keep_increasing.check,
+        '停机坪': parking_apron.check,
+        '回踩年线': backtrace_ma250.check,
+        '突破平台': breakthrough_platform.check,
+        '无大幅回撤': low_backtrace_increase.check,
         '海龟交易法则': turtle_trade.check_enter,
-        # '放量上涨': enter.check_volume,
-        # '均线多头': keep_increasing.check,
-        # '停机坪': parking_apron.check,
-        # '回踩年线': backtrace_ma250.check,
         '高而窄的旗形': high_tight_flag.check,
         '放量跌停': climax_limitdown.check,
-        # '突破平台': breakthrough_platform.check,
-        # '无大幅回撤': low_backtrace_increase.check,
     }
 
     if datetime.datetime.now().weekday() == 0:
@@ -56,7 +56,7 @@ def check(stocks_data, strategy, strategy_func):
     m_filter = check_enter(end_date=end, strategy_fun=strategy_func)
     results = dict(filter(m_filter, stocks_data.items()))
     if len(results) > 0:
-        push.strategy('**************"{0}"**************\n{1}\n**************"{0}"**************\n'.format(strategy, results.keys()))
+        push.strategy('**************"{0}"**************\n{1}\n**************"{0}"**************\n'.format(strategy, list(results.keys())))
 
 
 def check_enter(end_date=None, strategy_fun=enter.check_volume):

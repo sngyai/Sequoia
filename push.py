@@ -1,7 +1,6 @@
-import requests
-import json
+# -*- encoding: UTF-8 -*-
+
 import logging
-from requests.auth import HTTPBasicAuth
 import settings
 from wxpusher import WxPusher
 

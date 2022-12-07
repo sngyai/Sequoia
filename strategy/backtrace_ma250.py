@@ -19,7 +19,7 @@ def check(code_name, data, end_date=None, threshold=60):
         return
     data['ma250'] = pd.Series(tl.MA(data['收盘'].values, 250), index=data.index.values)
 
-    begin_date = data.iloc[0].date
+    begin_date = data.iloc[0].日期
     if end_date is not None:
         if end_date < begin_date:  # 该股票在end_date时还未上市
             logging.debug("{}在{}时还未上市".format(code_name, end_date))

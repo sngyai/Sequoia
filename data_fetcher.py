@@ -30,7 +30,7 @@ def run(stocks):
                 data = future.result()
                 if data is not None:
                     data = data.astype({'成交量': 'double'})
-                    stocks_data[stock[1]] = data
+                    stocks_data[stock] = data
             except Exception as exc:
                 print('%s(%r) generated an exception: %s' % (stock[1], stock[0], exc))
 

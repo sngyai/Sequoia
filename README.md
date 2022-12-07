@@ -6,7 +6,7 @@
 
 各策略中的`end_date`参数主要用于回测。
 
-## 安装依赖:
+## 准备工作:
  ### 根据不同的平台安装TA-Lib程序
 
 * Mac OS X
@@ -36,7 +36,7 @@
  pip install -r requirements.txt 
  ```
 
-## 生成配置文件
+ ### 生成配置文件
 
 ```
 cp config.yaml.example config.yaml
@@ -51,10 +51,10 @@ $ python main.py
 ### 服务器端运行
 用户也可以将本程序作为定时任务运行在服务端，需要做以下工作：
 * 将[config.yaml](config.yaml)中的`cron`配置改为`true`，`push`.`enable`改为true
-* 使用[WxPusher](https://wxpusher.zjiecode.com/docs/#/)实现了微信推送，用户需要自行申请`wxpusher_uid`和`wxpusher_token`，并配置到`config.yaml`中去。
+* 使用[WxPusher](https://wxpusher.zjiecode.com/docs/#/)实现了微信推送，用户需要自行获取[wxpusher_token](https://wxpusher.zjiecode.com/docs/#/?id=%e8%8e%b7%e5%8f%96apptoken)和[wxpusher_uid](https://wxpusher.zjiecode.com/docs/#/?id=%e8%8e%b7%e5%8f%96uid)，并配置到`config.yaml`中去。
 ## 如何回测
 
-修改 [work_flow.py#L61](https://github.com/sngyai/Sequoia/blob/master/work_flow.py#L61) 中`end`为指定日期，格式为`'YYYY-MM-DD'`，如：
+修改 `config.yaml` 中`end_date`为指定日期，格式为`'YYYY-MM-DD'`，如：
 ```
 end = '2019-06-17'
 ```

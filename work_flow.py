@@ -30,7 +30,7 @@ def prepare():
         '均线多头': keep_increasing.check,
         '停机坪': parking_apron.check,
         '回踩年线': backtrace_ma250.check,
-        '突破平台': breakthrough_platform.check,
+        # '突破平台': breakthrough_platform.check,
         '无大幅回撤': low_backtrace_increase.check,
         '海龟交易法则': turtle_trade.check_enter,
         '高而窄的旗形': high_tight_flag.check,

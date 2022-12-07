@@ -49,7 +49,7 @@ print("low atr check {0}'s result: {1}".format(code_name, result))
 #         data.close.values[-rolling_window:],
 #         timeperiod=moving_average
 #     )
-# print(data['high'].values)
+# print(data['最高'].values)
 #
 # print(average_true_range)
 

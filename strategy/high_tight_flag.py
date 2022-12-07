@@ -10,7 +10,7 @@ def check(code_name, data, end_date=None, threshold=60):
         return False
 
     if end_date is not None:
-        mask = (data['date'] <= end_date)
+        mask = (data['日期'] <= end_date)
         data = data.loc[mask]
     data = data.tail(n=threshold)
 
@@ -20,8 +20,8 @@ def check(code_name, data, end_date=None, threshold=60):
 
     data = data.tail(n=24)
     data = data.head(n=14)
-    low = data['low'].min()
-    ratio_increase = data.iloc[-1]['high'] / low
+    low = data['最低'].min()
+    ratio_increase = data.iloc[-1]['最高'] / low
     if ratio_increase < 1.9:
         return False
 

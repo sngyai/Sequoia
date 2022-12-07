@@ -1,7 +1,7 @@
 # -*- encoding: UTF-8 -*-
 import yaml
 import os
-import tushare as ts
+import akshare as ak
 
 
 def init():
@@ -11,10 +11,10 @@ def init():
     config_file = os.path.join(root_dir, 'config.yaml')
     with open(config_file, 'r') as file:
         config = yaml.safe_load(file)
-    df = ts.inst_tops(days=60)
-    mask = (df['bcount'] > 1)  # 机构买入次数大于1
+    df = ak.stock_lhb_stock_statistic_em(symbol="近三月")
+    mask = (df['买方机构次数'] > 1)  # 机构买入次数大于1
     df = df.loc[mask]
-    top_list = df['code'].tolist()
+    top_list = df['代码'].tolist()
 
 
 def config():

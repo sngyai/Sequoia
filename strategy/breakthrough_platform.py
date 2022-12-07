@@ -13,16 +13,10 @@ def check(code_name, data, end_date=None, threshold=60):
     if len(data) < threshold:
         logging.debug("{0}:样本小于{1}天...\n".format(code_name, threshold))
         return
-    data['ma60'] = pd.Series(tl.MA(data['close'].values, 60), index=data.index.values)
-
-    begin_date = data.iloc[0].date
-    if end_date is not None:
-        if end_date < begin_date:  # 该股票在end_date时还未上市
-            logging.debug("{}在{}时还未上市".format(code_name, end_date))
-            return False
+    data['ma60'] = pd.Series(tl.MA(data['收盘'].values, 60), index=data.index.values)
 
     if end_date is not None:
-        mask = (data['date'] <= end_date)
+        mask = (data['日期'] <= end_date)
         data = data.loc[mask]
 
     data = data.tail(n=threshold)
@@ -30,18 +24,18 @@ def check(code_name, data, end_date=None, threshold=60):
     breakthrough_row = None
 
     for index, row in data.iterrows():
-        if row['open'] < row['ma60'] <= row['close']:
-            if enter.check_volume(code_name, origin_data, row['date'], threshold):
+        if row['开盘'] < row['ma60'] <= row['收盘']:
+            if enter.check_volume(code_name, origin_data, row['日期'], threshold):
                 breakthrough_row = row
 
     if breakthrough_row is None:
         return False
 
-    data_front = data.loc[(data['date'] < breakthrough_row['date'])]
-    data_end = data.loc[(data['date'] >= breakthrough_row['date'])]
+    data_front = data.loc[(data['日期'] < breakthrough_row['日期'])]
+    data_end = data.loc[(data['日期'] >= breakthrough_row['日期'])]
 
     for index, row in data_front.iterrows():
-        if not (-0.05 < (row['ma60'] - row['close']) / row['ma60'] < 0.2):
+        if not (-0.05 < (row['ma60'] - row['收盘']) / row['ma60'] < 0.2):
             return False
 
     return True

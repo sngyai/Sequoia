@@ -6,13 +6,10 @@ import logging
 
 
 def check(code_name, data, end_date=None, threshold=60):
-    # # 流通市值不低于300亿
-    # if code_name[2] < 3000000:
-    #     return False
-
     if len(data) < threshold:
         logging.debug("{0}:样本小于250天...\n".format(code_name))
         return False
+
     data['vol_ma5'] = pd.Series(tl.MA(data['成交量'].values, 5), index=data.index.values)
 
     if end_date is not None:

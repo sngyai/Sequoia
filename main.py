@@ -10,7 +10,7 @@ import time
 
 def job():
     if utils.is_weekday():
-        work_flow.process()
+        work_flow.prepare()
 
 
 logging.basicConfig(format='%(asctime)s %(message)s', filename='sequoia.log')
@@ -25,4 +25,4 @@ if settings.config['cron']:
         schedule.run_pending()
         time.sleep(1)
 else:
-    work_flow.process()
+    work_flow.prepare()

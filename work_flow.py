@@ -21,7 +21,7 @@ import settings
 import pandas as pd
 
 
-def process():
+def prepare():
     logging.info("************************ process start ***************************************")
     all_data = ak.stock_zh_a_spot_em()
     subset = all_data[['代码', '名称', '总市值']]
@@ -43,13 +43,16 @@ def process():
     if datetime.datetime.now().weekday() == 0:
         strategies['均线多头'] = keep_increasing.check
 
+    process(stocks, strategies)
+
+
+    logging.info("************************ process   end ***************************************")
+
+def process(stocks, strategies):
     stocks_data = data_fetcher.run(stocks)
     for strategy, strategy_func in strategies.items():
         check(stocks_data, strategy, strategy_func)
         time.sleep(2)
-
-    logging.info("************************ process   end ***************************************")
-
 
 def check(stocks_data, strategy, strategy_func):
     end = None

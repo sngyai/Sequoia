@@ -12,11 +12,11 @@ def check_low_increase(code_name, data, end_date=None, ma_short=30, ma_long=250,
         logging.debug("{0}:样本小于{1}天...\n".format(code_name, ma_long))
         return False
 
-    data['ma_short'] = pd.Series(tl.MA(data['close'].values, ma_short), index=data.index.values)
-    data['ma_long'] = pd.Series(tl.MA(data['close'].values, ma_long), index=data.index.values)
+    data['ma_short'] = pd.Series(tl.MA(data['收盘'].values, ma_short), index=data.index.values)
+    data['ma_long'] = pd.Series(tl.MA(data['收盘'].values, ma_long), index=data.index.values)
 
     if end_date is not None:
-        mask = (data['date'] <= end_date)
+        mask = (data['日期'] <= end_date)
         data = data.loc[mask]
     data = data.tail(n=threshold)
     inc_days = 0
@@ -47,19 +47,19 @@ def check_low_increase(code_name, data, end_date=None, ma_short=30, ma_long=250,
             if p_change < 0:
                 dec_days = dec_days + 1
 
-            if row['close'] > highest_row['close']:
+            if row['收盘'] > highest_row['收盘']:
                 highest_row = row
-            if row['close'] < lowest_row['close']:
+            if row['收盘'] < lowest_row['收盘']:
                 lowest_row = row
 
     atr = total_change / days_count
     if atr > 10:
         return False
 
-    ratio = (highest_row['close'] - lowest_row['close']) / lowest_row['close']
+    ratio = (highest_row['收盘'] - lowest_row['收盘']) / lowest_row['收盘']
 
     if ratio > 1.1:
-        logging.debug("股票：{0}（{1}）  最低:{2}, 最高:{3}, 涨跌比率:{4}       上涨天数:{5}， 下跌天数:{6}".format(name, stock, lowest_row['date'], highest_row['date'], ratio, inc_days, dec_days))
+        logging.debug("股票：{0}（{1}）  最低:{2}, 最高:{3}, 涨跌比率:{4}       上涨天数:{5}， 下跌天数:{6}".format(name, stock, lowest_row['日期'], highest_row['日期'], ratio, inc_days, dec_days))
         return True
 
     return False

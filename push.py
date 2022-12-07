@@ -6,21 +6,6 @@ import settings
 from wxpusher import WxPusher
 
 
-# def push(msg):
-#     if settings.config['push']['enable']:
-#         payload = json.dumps({
-#             "type": "headline",
-#             "from": settings.config['push']['admin'],
-#             "to": settings.config['push']['user'],
-#             "subject": "investing",
-#             "body": msg
-#         })
-#         response = requests.post(settings.config['push']['url'], auth=HTTPBasicAuth(settings.config['push']['admin'],
-#                                                 settings.config['push']['admin_pass']), data=payload)
-#         print(response.text)
-#     logging.info(msg)
-
-
 def push(msg):
     if settings.config['push']['enable']:
         response = WxPusher.send_message(msg, uids=[settings.config['push']['wxpusher_uid']],

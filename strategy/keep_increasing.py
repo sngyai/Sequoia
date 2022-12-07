@@ -3,7 +3,6 @@
 import talib as tl
 import pandas as pd
 import logging
-from strategy import turtle_trade
 
 
 # 持续上涨（MA30向上）
@@ -11,16 +10,10 @@ def check(code_name, data, end_date=None, threshold=30):
     if len(data) < threshold:
         logging.debug("{0}:样本小于{1}天...\n".format(code_name, threshold))
         return
-    data['ma30'] = pd.Series(tl.MA(data['close'].values, 30), index=data.index.values)
-
-    begin_date = data.iloc[0].date
-    if end_date is not None:
-        if end_date < begin_date:  # 该股票在end_date时还未上市
-            logging.debug("{}在{}时还未上市".format(code_name, end_date))
-            return False
+    data['ma30'] = pd.Series(tl.MA(data['收盘'].values, 30), index=data.index.values)
 
     if end_date is not None:
-        mask = (data['date'] <= end_date)
+        mask = (data['日期'] <= end_date)
         data = data.loc[mask]
 
     data = data.tail(n=threshold)

@@ -1,11 +1,10 @@
-tushare==1.2.60
 PyYAML==5.4
 requests==2.24.0
 pandas==1.5.2
 numpy==1.23.5
 xlrd==1.2.0
 TA-Lib==0.4.25
-tables==3.6.1
+tables==3.7.0
 schedule==0.6.0
 wxpusher==2.2.0
 pytest==7.2.0

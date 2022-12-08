@@ -49,12 +49,26 @@ $ python main.py
 运行结果查看日志文件[sequoia.log](sequoia.log)
 
 ### 服务器端运行
-用户也可以将本程序作为定时任务运行在服务端，需要做以下工作：
-* 将[config.yaml](config.yaml.example)中的`cron`配置改为`true`，`push`.`enable`改为true
+服务器端运行需要改为定时任务，共有两种方式：
+1. 使用Python schedule定时任务
+* 将[config.yaml](config.yaml.example)中的`cron`配置改为`true`，`push`.`enable`改为`true`
 * 使用[WxPusher](https://wxpusher.zjiecode.com/docs/#/)实现了微信推送，用户需要自行获取[wxpusher_token](https://wxpusher.zjiecode.com/docs/#/?id=%e8%8e%b7%e5%8f%96apptoken)和[wxpusher_uid](https://wxpusher.zjiecode.com/docs/#/?id=%e8%8e%b7%e5%8f%96uid)，并配置到`config.yaml`中去。
+
+2. 使用crontab定时任务
+   * 保持[config.yaml](config.yaml.example)中的`cron`配置为***false***，`push`.`enable`为`true`
+   * [安装crontab](https://www.digitalocean.com/community/tutorials/how-to-use-cron-to-automate-tasks-ubuntu-1804)
+   * `crontab -e` 添加如下内容(服务器端安装了miniconda3)：
+   ```bash
+    SHELL=/bin/bash
+    PATH=/usr/bin:/bin:/home/ubuntu/miniconda3/bin/
+    # m h  dom mon dow   command
+    0 3 * * 1-5 source /home/ubuntu/miniconda3/bin/activate python3.10; python3 /home/ubuntu/Sequoia/main.py >> /home/ubuntu/Sequoia/sequoia.log; source /home/ubuntu/miniconda3/bin/deactivate
+   ```
+
 ## 如何回测
 
 修改 `config.yaml` 中`end_date`为指定日期，格式为`'YYYY-MM-DD'`，如：
 ```
 end = '2019-06-17'
 ```
+

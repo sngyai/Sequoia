@@ -2,7 +2,7 @@
 ### 简介
 本程序使用[AKShare接口](https://github.com/akfamily/akshare)，从东方财富获取数据。
 
-本程序实现了若干种选股策略，大家可以自行选择其中的一到多种策略组合使用，参见[work_flow.py](https://github.com/sngyai/Sequoia/blob/master/work_flow.py#L28-L36)，也可以实现自己的策略。
+本程序实现了若干种选股策略，大家可以自行选择其中的一到多种策略组合使用，参见[work_flow.py](https://github.com/sngyai/Sequoia/blob/master/work_flow.py#L28-L38)，也可以实现自己的策略。
 
 各策略中的`end_date`参数主要用于回测。
 

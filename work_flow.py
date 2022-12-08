@@ -2,7 +2,6 @@
 
 import data_fetcher
 import settings
-import utils
 import strategy.enter as enter
 from strategy import turtle_trade, climax_limitdown
 from strategy import backtrace_ma250

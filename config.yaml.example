@@ -1,6 +1,6 @@
 cron: false
 data_dir: "data"
-end_date: '2019-06-17'
+end_date: 
 
 push:
   enable: false

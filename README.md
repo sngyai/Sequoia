@@ -35,7 +35,11 @@
  ```
  pip install -r requirements.txt 
  ```
-
+ ### 更新akshare数据接口
+ 本项目已切换至akshare数据接口，该项目更新频率较高，使用前建议检查接口更新
+``` 
+pip install akshare --upgrade
+```
  ### 生成配置文件
 
 ```

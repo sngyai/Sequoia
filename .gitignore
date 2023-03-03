@@ -8,3 +8,5 @@
 .DS_Store
 storage/Positions
 config.yaml
+
+logs/*

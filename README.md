@@ -116,7 +116,8 @@ cp config.yaml.example config.yaml
 ```
 $ python main.py
 ```
-运行结果查看日志文件[sequoia.log](sequoia.log)
+运行结果查看 logs 目录下生成的日志文件 格式为 `logs/sequoia-$YEAR-$MONTH-$DAY-$HOUR-$MINUTE-$SECOND.log`
+如：`logs/sequoia-2023-03-03-20-47-56.log`
 
 ### 服务器端运行
 #### 定时任务

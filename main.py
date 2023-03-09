@@ -6,6 +6,7 @@ import work_flow
 import settings
 import schedule
 import time
+import datetime
 
 
 def job():
@@ -13,7 +14,9 @@ def job():
         work_flow.prepare()
 
 
-logging.basicConfig(format='%(asctime)s %(message)s', filename='sequoia.log')
+current_time = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
+log_filename = 'logs/sequoia-{}.log'.format(current_time)
+logging.basicConfig(format='%(asctime)s %(message)s', filename=log_filename)
 logging.getLogger().setLevel(logging.INFO)
 settings.init()
 

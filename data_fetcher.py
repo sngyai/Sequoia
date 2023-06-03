@@ -9,7 +9,7 @@ import concurrent.futures
 
 def fetch(code_name):
     stock = code_name[0]
-    data = ak.stock_zh_a_hist(symbol=stock, period="daily", start_date="20200101", adjust="qfq")
+    data = ak.stock_zh_a_hist(symbol=stock, period="daily", start_date="20220101", adjust="qfq")
 
     if data is None or data.empty:
         logging.debug("股票："+stock+" 没有数据，略过...")

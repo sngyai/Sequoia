@@ -18,17 +18,21 @@ def check(code_name, data, end_date=None, threshold=60):
         logging.debug("{0}:样本小于{1}天...\n".format(code_name, threshold))
         return False
 
-    data = data.tail(n=24)
-    data = data.head(n=14)
+    data = data.tail(n=14)
     low = data['最低'].min()
     ratio_increase = data.iloc[-1]['最高'] / low
     if ratio_increase < 1.9:
         return False
 
+    previous_p_change = 0.0
     # 连续两天涨幅大于等于10%
-    for i in range(1, len(data)):
-        # 单日跌幅超7%；高开低走7%；两日累计跌幅10%；两日高开低走累计10%
-        if data.iloc[i - 1]['p_change'] >= 9.5 and data.iloc[i]['p_change'] >= 9.5:
-            return True
+    for _p_change in data['p_change'].values:
+        if _p_change >= 9.5:
+            if previous_p_change >= 9.5:
+                return True
+            else:
+                previous_p_change = _p_change
+        else:
+            previous_p_change = 0.0
 
     return False

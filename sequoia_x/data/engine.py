@@ -46,7 +46,20 @@ def _bs_fetch_batch(tasks: list) -> list:
             adjustflag="1",  # 后复权
         )
         if rs.error_code != "0":
-            continue
+            if "未登录" in rs.error_msg or "login" in rs.error_msg.lower():
+                bs.login()
+                rs = bs.query_history_k_data_plus(
+                    bs_code,
+                    "date,open,high,low,close,volume,amount",
+                    start_date=start,
+                    end_date=end,
+                    frequency="d",
+                    adjustflag="1",
+                )
+                if rs.error_code != "0":
+                    continue
+            else:
+                continue
         while rs.next():
             results.append([symbol] + rs.get_row_data())
     bs.logout()
@@ -162,9 +175,14 @@ class DataEngine:
 
         today_str = date.today().strftime("%Y-%m-%d")
 
-        lg = bs.login()
-        if lg.error_code != "0":
-            logger.error(f"baostock 登录失败: {lg.error_msg}")
+        def _bs_login() -> bool:
+            lg = bs.login()
+            if lg.error_code != "0":
+                logger.error(f"baostock 登录失败: {lg.error_msg}")
+                return False
+            return True
+
+        if not _bs_login():
             return
 
         success = 0
@@ -195,9 +213,31 @@ class DataEngine:
                 )
 
                 if rs.error_code != "0":
-                    logger.warning(f"[{symbol}] baostock 查询失败: {rs.error_msg}")
-                    failed += 1
-                    continue
+                    if "未登录" in rs.error_msg or "login" in rs.error_msg.lower():
+                        logger.warning(f"[{symbol}] session 过期，自动重连...")
+                        if _bs_login():
+                            rs = bs.query_history_k_data_plus(
+                                bs_code,
+                                "date,open,high,low,close,volume,amount",
+                                start_date=start,
+                                end_date=today_str,
+                                frequency="d",
+                                adjustflag="1",
+                            )
+                            if rs.error_code == "0":
+                                # 重连成功，继续下面的数据处理
+                                pass
+                            else:
+                                logger.warning(f"[{symbol}] 重连后仍失败: {rs.error_msg}")
+                                failed += 1
+                                continue
+                        else:
+                            logger.error("重连失败，终止回填")
+                            return
+                    else:
+                        logger.warning(f"[{symbol}] baostock 查询失败: {rs.error_msg}")
+                        failed += 1
+                        continue
 
                 rows = []
                 while rs.next():

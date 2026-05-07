@@ -1,0 +1,193 @@
+{% extends "base.html" %}
+{% block title %}系统监控 - Sequoia-X{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="mb-0"><i class="bi bi-hdd-stack"></i> 系统监控</h2>
+    <div class="d-flex gap-2">
+        <button class="btn btn-success btn-sm" id="btn-sync" onclick="syncData()">
+            <i class="bi bi-cloud-download"></i> 同步数据
+        </button>
+        <button class="btn btn-warning btn-sm" id="btn-backfill" onclick="backfillData()">
+            <i class="bi bi-database-down"></i> 回填历史
+        </button>
+        <button class="btn btn-outline-primary btn-sm" onclick="refreshAll()">
+            <i class="bi bi-arrow-clockwise"></i> 刷新
+        </button>
+    </div>
+</div>
+<div id="sync-status" class="alert alert-info py-2 mb-3" style="display:none;">
+    <div class="d-flex align-items-center gap-2">
+        <div class="spinner-border spinner-border-sm" role="status"></div>
+        <span id="sync-status-text">正在同步今日数据...</span>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <div class="text-muted small">数据库大小</div>
+                <div class="fs-3 fw-bold" id="info-db-size">{{ info.db_size_mb }} MB</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <div class="text-muted small">数据总行数</div>
+                <div class="fs-3 fw-bold" id="info-rows">{{ "{:,}".format(info.total_rows) }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <div class="text-muted small">股票数量</div>
+                <div class="fs-3 fw-bold" id="info-symbols">{{ "{:,}".format(info.distinct_symbols) }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <div class="text-muted small">最新同步日期</div>
+                <div class="fs-3 fw-bold" id="info-last-date">{{ info.last_sync_date }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-journal-text"></i> 运行日志</span>
+                <label class="form-check form-switch mb-0">
+                    <input class="form-check-input" type="checkbox" id="auto-refresh" checked>
+                    <span class="form-check-label small">自动刷新</span>
+                </label>
+            </div>
+            <div class="card-body p-0">
+                <div class="log-viewer" id="log-viewer">
+                    {% for line in logs %}
+                    <div>{{ line }}</div>
+                    {% endfor %}
+                    {% if not logs %}
+                    <div class="text-muted">暂无日志</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+async function refreshSystem() {
+    try {
+        const info = await api('/api/system');
+        document.getElementById('info-db-size').textContent = info.db_size_mb + ' MB';
+        document.getElementById('info-rows').textContent = info.total_rows.toLocaleString();
+        document.getElementById('info-symbols').textContent = info.distinct_symbols.toLocaleString();
+        document.getElementById('info-last-date').textContent = info.last_sync_date;
+    } catch (e) {}
+}
+
+async function refreshLogs() {
+    try {
+        const { logs } = await api('/api/system/logs?limit=50');
+        const viewer = document.getElementById('log-viewer');
+        viewer.innerHTML = logs.map(l => `<div>${l}</div>`).join('') || '<div class="text-muted">暂无日志</div>';
+        viewer.scrollTop = viewer.scrollHeight;
+    } catch (e) {}
+}
+
+async function refreshAll() {
+    await Promise.all([refreshSystem(), refreshLogs()]);
+}
+
+async function syncData() {
+    const btn = document.getElementById('btn-sync');
+    const statusEl = document.getElementById('sync-status');
+    const statusText = document.getElementById('sync-status-text');
+
+    btn.disabled = true;
+    statusEl.style.display = 'block';
+    statusEl.className = 'alert alert-info py-2 mb-3';
+    statusText.textContent = '正在同步今日数据，预计 2~3 分钟...';
+
+    try {
+        const { task_id } = await api('/api/system/sync', { method: 'POST' });
+        const result = await pollTask(task_id, (data) => {
+            statusText.textContent = '同步中，请稍候...';
+        });
+
+        if (result.status === 'done') {
+            statusEl.className = 'alert alert-success py-2 mb-3';
+            statusText.textContent = '同步完成！正在刷新数据...';
+            await refreshAll();
+            showToast('数据同步完成');
+        } else {
+            statusEl.className = 'alert alert-danger py-2 mb-3';
+            statusText.textContent = '同步失败: ' + (result.error || '未知错误');
+            showToast('同步失败', 'error');
+        }
+    } catch (e) {
+        statusEl.className = 'alert alert-danger py-2 mb-3';
+        statusText.textContent = '请求失败: ' + e.message;
+        showToast('同步请求失败', 'error');
+    }
+
+    btn.disabled = false;
+    setTimeout(() => { statusEl.style.display = 'none'; }, 5000);
+}
+
+async function backfillData() {
+    if (!confirm('回填全市场历史数据约需 12 分钟，确定继续？')) return;
+
+    const btn = document.getElementById('btn-backfill');
+    const statusEl = document.getElementById('sync-status');
+    const statusText = document.getElementById('sync-status-text');
+
+    btn.disabled = true;
+    document.getElementById('btn-sync').disabled = true;
+    statusEl.style.display = 'block';
+    statusEl.className = 'alert alert-warning py-2 mb-3';
+    statusText.textContent = '正在回填全市场历史数据，预计约 12 分钟...';
+
+    try {
+        const { task_id } = await api('/api/system/backfill', { method: 'POST' });
+        const result = await pollTask(task_id, (data) => {
+            statusText.textContent = '回填中，请耐心等待...';
+        });
+
+        if (result.status === 'done') {
+            statusEl.className = 'alert alert-success py-2 mb-3';
+            statusText.textContent = '回填完成！正在刷新数据...';
+            await refreshAll();
+            showToast('历史数据回填完成');
+        } else {
+            statusEl.className = 'alert alert-danger py-2 mb-3';
+            statusText.textContent = '回填失败: ' + (result.error || '未知错误');
+            showToast('回填失败', 'error');
+        }
+    } catch (e) {
+        statusEl.className = 'alert alert-danger py-2 mb-3';
+        statusText.textContent = '请求失败: ' + e.message;
+        showToast('回填请求失败', 'error');
+    }
+
+    btn.disabled = false;
+    document.getElementById('btn-sync').disabled = false;
+    setTimeout(() => { statusEl.style.display = 'none'; }, 5000);
+}
+
+// 自动刷新
+setInterval(() => {
+    if (document.getElementById('auto-refresh').checked) {
+        refreshAll();
+    }
+}, 10000);
+</script>
+{% endblock %}

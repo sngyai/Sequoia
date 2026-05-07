@@ -1,8 +1,9 @@
 """Sequoia-X V2 主程序入口。
 
-两种运行模式：
+运行模式：
   python main.py               # 日常模式：8进程增量补数据 + 跑策略 + 飞书推送（2~3分钟）
   python main.py --backfill    # 回填模式：baostock 拉全市场历史K线（首次/补数据用，约12分钟）
+  python main.py web           # Web 仪表盘：可视化管理、配置飞书推送、浏览数据
 """
 
 import argparse
@@ -28,6 +29,15 @@ from sequoia_x.strategy.uptrend_limit_down import UptrendLimitDownStrategy
 from sequoia_x.strategy.rps_breakout import RpsBreakoutStrategy
 
 
+def _run_web(args: argparse.Namespace) -> None:
+    """启动 Web 仪表盘。"""
+    import uvicorn
+    from sequoia_x.web.app import create_app
+
+    app = create_app()
+    uvicorn.run(app, host=args.host, port=args.port, reload=args.reload)
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Sequoia-X V2 选股系统")
     parser.add_argument(
@@ -35,7 +45,20 @@ def main() -> None:
         action="store_true",
         help="回填模式：通过 baostock 拉取全市场历史 K 线（约12分钟）",
     )
+    parser.add_argument(
+        "command",
+        nargs="?",
+        choices=["web"],
+        help="web: 启动 Web 仪表盘",
+    )
+    parser.add_argument("--host", default="0.0.0.0", help="Web 监听地址（默认 0.0.0.0）")
+    parser.add_argument("--port", type=int, default=8000, help="Web 监听端口（默认 8000）")
+    parser.add_argument("--reload", action="store_true", help="开发模式自动重载")
     args = parser.parse_args()
+
+    if args.command == "web":
+        _run_web(args)
+        return
 
     try:
         # 1. 初始化配置

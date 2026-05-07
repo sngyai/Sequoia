@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block title %}Dashboard - Sequoia-X{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="mb-1">策略总览</h2>
+        <p class="text-muted mb-0">6 个量化选股策略，点击查看详情或手动运行</p>
+    </div>
+    <a href="/docs" class="btn btn-outline-secondary btn-sm" target="_blank">
+        <i class="bi bi-braces"></i> API Docs
+    </a>
+</div>
+
+<div class="row g-4">
+    {% for s in strategies %}
+    <div class="col-md-6 col-lg-4">
+        <div class="card strategy-card h-100" onclick="window.location='/strategy/{{ s.key }}'">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <h5 class="card-title mb-0">{{ s.name_cn }}</h5>
+                    <span class="badge bg-secondary">{{ s.webhook_key }}</span>
+                </div>
+                <p class="text-muted small mb-1">{{ s.name }}</p>
+                <p class="card-text">{{ s.description }}</p>
+                <div class="d-flex justify-content-between align-items-center mt-3">
+                    <span class="badge bg-info" id="count-{{ s.key }}">
+                        {% if s.latest_result_count > 0 %}
+                            {{ s.latest_result_count }} 只选股
+                        {% else %}
+                            未运行
+                        {% endif %}
+                    </span>
+                    <button class="btn btn-primary btn-sm" onclick="event.stopPropagation(); runStrategy('{{ s.key }}')">
+                        <i class="bi bi-play-fill"></i> 运行
+                    </button>
+                </div>
+                <div id="status-{{ s.key }}" class="mt-2" style="display:none;">
+                    <div class="progress" style="height: 4px;">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated" style="width: 100%"></div>
+                    </div>
+                    <small class="text-muted" id="status-text-{{ s.key }}">运行中...</small>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+async function runStrategy(key) {
+    const statusEl = document.getElementById('status-' + key);
+    const statusText = document.getElementById('status-text-' + key);
+    const countEl = document.getElementById('count-' + key);
+
+    statusEl.style.display = 'block';
+    statusText.textContent = '提交中...';
+
+    try {
+        const { task_id } = await api(`/api/strategies/${key}/run`, { method: 'POST' });
+        statusText.textContent = '运行中...';
+
+        const result = await pollTask(task_id, (data) => {
+            if (data.status === 'running') statusText.textContent = '运行中...';
+        });
+
+        if (result.status === 'done') {
+            countEl.textContent = result.result_count + ' 只选股';
+            countEl.className = 'badge bg-' + (result.result_count > 0 ? 'success' : 'secondary');
+            showToast(`${key} 完成，选出 ${result.result_count} 只股票`);
+        } else {
+            showToast(`${key} 出错: ${result.error}`, 'error');
+        }
+    } catch (e) {
+        showToast('请求失败: ' + e.message, 'error');
+    }
+
+    setTimeout(() => { statusEl.style.display = 'none'; }, 3000);
+}
+</script>
+{% endblock %}

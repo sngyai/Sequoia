@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+{% block title %}飞书配置 - Sequoia-X{% endblock %}
+{% block content %}
+<h2 class="mb-4"><i class="bi bi-gear"></i> 飞书 Webhook 配置</h2>
+
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">Webhook URL 配置</div>
+            <div class="card-body">
+                <form id="config-form">
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">
+                            默认 Webhook URL
+                            <span class="badge bg-danger ms-1">必填</span>
+                        </label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="feishu_webhook_url"
+                                   value="{{ settings.feishu_webhook_url }}" placeholder="https://open.feishu.cn/open-apis/bot/v2/hook/...">
+                            <button class="btn btn-outline-secondary" type="button" onclick="testWebhook('feishu_webhook_url')">
+                                <i class="bi bi-lightning"></i> 测试
+                            </button>
+                        </div>
+                        <div class="form-text">未配置专属 Webhook 的策略将使用此默认地址</div>
+                    </div>
+
+                    <hr>
+                    <h6 class="mb-3">策略专属 Webhook（可选）</h6>
+
+                    {% for key, meta in strategies.items() %}
+                    <div class="mb-3">
+                        <label class="form-label">
+                            {{ meta.name_cn }}
+                            <span class="badge bg-secondary">{{ key }}</span>
+                        </label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="wh-{{ key }}"
+                                   value="{{ settings.strategy_webhooks.get(key, '') }}"
+                                   placeholder="留空则使用默认 Webhook">
+                            <button class="btn btn-outline-secondary" type="button" onclick="testWebhook('wh-{{ key }}')">
+                                <i class="bi bi-lightning"></i> 测试
+                            </button>
+                        </div>
+                        <div class="form-text">{{ meta.description }}</div>
+                    </div>
+                    {% endfor %}
+
+                    <div class="d-flex gap-2 mt-4">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-lg"></i> 保存配置
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary" onclick="location.reload()">
+                            <i class="bi bi-arrow-counterclockwise"></i> 重置
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">系统配置（只读）</div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-5">数据库路径</dt>
+                    <dd class="col-7"><code>{{ settings.db_path }}</code></dd>
+                    <dt class="col-5">数据起始</dt>
+                    <dd class="col-7">{{ settings.start_date }}</dd>
+                </dl>
+            </div>
+        </div>
+
+        <div class="card mt-3">
+            <div class="card-header">配置说明</div>
+            <div class="card-body small text-muted">
+                <p>配置保存后会自动写入 <code>.env</code> 文件并重载。</p>
+                <p>Webhook URL 格式：<br>
+                <code>https://open.feishu.cn/open-apis/bot/v2/hook/your-token</code></p>
+                <p>每个策略可以配置专属的 Webhook，推送到不同的飞书群。留空则使用默认地址。</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.getElementById('config-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const strategyWebhooks = {};
+    {% for key in strategies %}
+    {
+        const val = document.getElementById('wh-{{ key }}').value.trim();
+        if (val) strategyWebhooks['{{ key }}'] = val;
+    }
+    {% endfor %}
+
+    try {
+        const result = await api('/api/config', {
+            method: 'PUT',
+            body: JSON.stringify({
+                feishu_webhook_url: document.getElementById('feishu_webhook_url').value.trim(),
+                strategy_webhooks: strategyWebhooks,
+            }),
+        });
+        showToast(result.message);
+    } catch (e) {
+        showToast('保存失败: ' + e.message, 'error');
+    }
+});
+
+async function testWebhook(inputId) {
+    const url = document.getElementById(inputId).value.trim();
+    if (!url) {
+        showToast('请先填写 Webhook URL', 'error');
+        return;
+    }
+    try {
+        const result = await api('/api/config/test-webhook', {
+            method: 'POST',
+            body: JSON.stringify({ url }),
+        });
+        if (result.ok) {
+            showToast('测试成功！飞书已收到消息');
+        } else {
+            showToast(`测试失败: ${result.message}`, 'error');
+        }
+    } catch (e) {
+        showToast('测试请求失败: ' + e.message, 'error');
+    }
+}
+</script>
+{% endblock %}

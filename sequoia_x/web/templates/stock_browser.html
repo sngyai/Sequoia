@@ -1,0 +1,173 @@
+{% extends "base.html" %}
+{% block title %}股票浏览 - Sequoia-X{% endblock %}
+{% block content %}
+<h2 class="mb-4"><i class="bi bi-search"></i> 股票数据浏览</h2>
+
+<div class="row g-4">
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">搜索股票</div>
+            <div class="card-body">
+                <div class="input-group mb-3">
+                    <input type="text" class="form-control" id="search-input" placeholder="输入股票代码，如 600" autofocus>
+                    <button class="btn btn-primary" onclick="doSearch()">
+                        <i class="bi bi-search"></i>
+                    </button>
+                </div>
+                <div id="search-results" class="list-group" style="max-height: 400px; overflow-y: auto;"></div>
+            </div>
+        </div>
+
+        <div class="card mt-3" id="summary-card" style="display:none;">
+            <div class="card-header">股票概览</div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-5">代码</dt>
+                    <dd class="col-7" id="sum-symbol"></dd>
+                    <dt class="col-5">最新收盘</dt>
+                    <dd class="col-7" id="sum-close"></dd>
+                    <dt class="col-5">涨跌幅</dt>
+                    <dd class="col-7" id="sum-change"></dd>
+                    <dt class="col-5">数据范围</dt>
+                    <dd class="col-7" id="sum-range"></dd>
+                    <dt class="col-5">数据条数</dt>
+                    <dd class="col-7" id="sum-rows"></dd>
+                </dl>
+                <a id="sum-xueqiu" href="#" target="_blank" class="btn btn-outline-primary btn-sm w-100 mt-2">
+                    <i class="bi bi-box-arrow-up-right"></i> 在雪球查看
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-table"></i> K线数据</span>
+                <select class="form-select form-select-sm" style="width: auto;" id="days-select" onchange="loadStockData()">
+                    <option value="30">近30天</option>
+                    <option value="60">近60天</option>
+                    <option value="120" selected>近120天</option>
+                    <option value="250">近250天</option>
+                </select>
+            </div>
+            <div class="card-body">
+                <div id="data-empty" class="text-center text-muted py-5">
+                    <i class="bi bi-bar-chart" style="font-size: 2rem;"></i>
+                    <p>请先搜索并选择一只股票</p>
+                </div>
+                <div id="data-table-wrapper" style="display:none;">
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover table-stock">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>日期</th>
+                                    <th class="text-end">开盘</th>
+                                    <th class="text-end">最高</th>
+                                    <th class="text-end">最低</th>
+                                    <th class="text-end">收盘</th>
+                                    <th class="text-end">成交量</th>
+                                    <th class="text-end">成交额</th>
+                                </tr>
+                            </thead>
+                            <tbody id="data-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let currentSymbol = null;
+
+document.getElementById('search-input').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') doSearch();
+});
+
+async function doSearch() {
+    const q = document.getElementById('search-input').value.trim();
+    if (!q) return;
+
+    const container = document.getElementById('search-results');
+    container.innerHTML = '<div class="text-center py-2"><div class="spinner-border spinner-border-sm"></div></div>';
+
+    try {
+        const { symbols } = await api(`/api/stocks/search?q=${encodeURIComponent(q)}`);
+        if (symbols.length === 0) {
+            container.innerHTML = '<div class="text-muted p-2">未找到匹配的股票</div>';
+            return;
+        }
+        container.innerHTML = symbols.map(s => `
+            <button class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
+                    onclick="selectStock('${s}')">
+                <code>${s}</code>
+                <i class="bi bi-chevron-right"></i>
+            </button>
+        `).join('');
+    } catch (e) {
+        container.innerHTML = `<div class="text-danger p-2">搜索失败: ${e.message}</div>`;
+    }
+}
+
+async function selectStock(symbol) {
+    currentSymbol = symbol;
+    loadStockData();
+    loadSummary();
+}
+
+async function loadSummary() {
+    if (!currentSymbol) return;
+    try {
+        const s = await api(`/api/stocks/${currentSymbol}/summary`);
+        document.getElementById('sum-symbol').textContent = s.symbol;
+        document.getElementById('sum-close').textContent = s.latest_close;
+        const changeEl = document.getElementById('sum-change');
+        changeEl.textContent = s.change_pct + '%';
+        changeEl.className = 'col-7 ' + (s.change_pct >= 0 ? 'text-danger' : 'text-success');
+        document.getElementById('sum-range').textContent = s.date_range.join(' ~ ');
+        document.getElementById('sum-rows').textContent = s.total_rows;
+        document.getElementById('sum-xueqiu').href = `https://xueqiu.com/S/${s.xueqiu_code}`;
+        document.getElementById('summary-card').style.display = 'block';
+    } catch (e) {
+        showToast('加载概览失败', 'error');
+    }
+}
+
+async function loadStockData() {
+    if (!currentSymbol) return;
+    const days = document.getElementById('days-select').value;
+
+    try {
+        const { data } = await api(`/api/stocks/${currentSymbol}?days=${days}`);
+        const tbody = document.getElementById('data-body');
+
+        if (data.length === 0) {
+            document.getElementById('data-empty').style.display = 'block';
+            document.getElementById('data-table-wrapper').style.display = 'none';
+            return;
+        }
+
+        tbody.innerHTML = data.reverse().map(d => `
+            <tr>
+                <td>${d.date}</td>
+                <td class="text-end">${d.open.toFixed(2)}</td>
+                <td class="text-end">${d.high.toFixed(2)}</td>
+                <td class="text-end">${d.low.toFixed(2)}</td>
+                <td class="text-end">${d.close.toFixed(2)}</td>
+                <td class="text-end">${(d.volume / 10000).toFixed(0)}万</td>
+                <td class="text-end">${(d.turnover / 100000000).toFixed(2)}亿</td>
+            </tr>
+        `).join('');
+
+        document.getElementById('data-empty').style.display = 'none';
+        document.getElementById('data-table-wrapper').style.display = 'block';
+    } catch (e) {
+        showToast('加载数据失败: ' + e.message, 'error');
+    }
+}
+</script>
+{% endblock %}

@@ -17,7 +17,10 @@ ENV/
 .kiro
 
 # 数据库文件
-data/*.db
+/data/
+*.db
+*.db-shm
+*.db-wal
 
 # 环境变量
 .env

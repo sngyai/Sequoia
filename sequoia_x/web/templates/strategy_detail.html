@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+{% block title %}{{ meta.name_cn }} - Sequoia-X{% endblock %}
+{% block content %}
+<nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="/">Dashboard</a></li>
+        <li class="breadcrumb-item active">{{ meta.name_cn }}</li>
+    </ol>
+</nav>
+
+<div class="row g-4">
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-body">
+                <h4>{{ meta.name_cn }}</h4>
+                <p class="text-muted">{{ meta.name }} <span class="badge bg-secondary">{{ key }}</span></p>
+                <p>{{ meta.description }}</p>
+                <hr>
+                <dl class="row mb-0">
+                    <dt class="col-5">最少数据</dt>
+                    <dd class="col-7">{{ meta.min_bars }} 根K线</dd>
+                    <dt class="col-5">Webhook</dt>
+                    <dd class="col-7">
+                        <small class="text-muted text-break">{{ strategy.webhook_url[:50] }}...</small>
+                    </dd>
+                </dl>
+                <button class="btn btn-primary w-100 mt-3" id="btn-run" onclick="runStrategy()">
+                    <i class="bi bi-play-fill"></i> 运行策略
+                </button>
+                <div id="run-status" class="mt-2" style="display:none;">
+                    <div class="progress" style="height: 6px;">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated" style="width: 100%"></div>
+                    </div>
+                    <small class="text-muted" id="run-status-text">运行中...</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-list-check"></i> 选股结果</span>
+                <span class="badge bg-info" id="result-count">{{ results|length }} 只</span>
+            </div>
+            <div class="card-body">
+                <div id="results-empty" class="text-center text-muted py-5" {% if results %}style="display:none;"{% endif %}>
+                    <i class="bi bi-inbox" style="font-size: 2rem;"></i>
+                    <p>暂无结果，请先运行策略</p>
+                </div>
+                <div id="results-table" {% if not results %}style="display:none;"{% endif %}>
+                    <table class="table table-hover table-stock">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>股票代码</th>
+                                <th>雪球</th>
+                            </tr>
+                        </thead>
+                        <tbody id="results-body">
+                            {% for code in results %}
+                            <tr>
+                                <td>{{ loop.index }}</td>
+                                <td><code>{{ code }}</code></td>
+                                <td>
+                                    <a href="https://xueqiu.com/S/{{ 'SH' + code if code.startswith('6') else ('BJ' + code if code.startswith(('4','8')) else 'SZ' + code) }}"
+                                       target="_blank" class="btn btn-outline-primary btn-sm">
+                                        <i class="bi bi-box-arrow-up-right"></i> 雪球
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+async function runStrategy() {
+    const btn = document.getElementById('btn-run');
+    const statusEl = document.getElementById('run-status');
+    const statusText = document.getElementById('run-status-text');
+
+    btn.disabled = true;
+    statusEl.style.display = 'block';
+    statusText.textContent = '提交中...';
+
+    try {
+        const { task_id } = await api(`/api/strategies/{{ key }}/run`, { method: 'POST' });
+        statusText.textContent = '运行中，请稍候...';
+
+        const result = await pollTask(task_id, (data) => {
+            statusText.textContent = '运行中...';
+        });
+
+        if (result.status === 'done') {
+            showToast(`运行完成，选出 ${result.result_count} 只股票`);
+            // 更新结果表格
+            const tbody = document.getElementById('results-body');
+            const emptyEl = document.getElementById('results-empty');
+            const tableEl = document.getElementById('results-table');
+            const countEl = document.getElementById('result-count');
+
+            tbody.innerHTML = '';
+            if (result.results.length > 0) {
+                result.results.forEach((code, i) => {
+                    const xq = code.startsWith('6') ? 'SH' + code : (code.startsWith('4') || code.startsWith('8') ? 'BJ' + code : 'SZ' + code);
+                    tbody.innerHTML += `<tr>
+                        <td>${i + 1}</td>
+                        <td><code>${code}</code></td>
+                        <td><a href="https://xueqiu.com/S/${xq}" target="_blank" class="btn btn-outline-primary btn-sm"><i class="bi bi-box-arrow-up-right"></i> 雪球</a></td>
+                    </tr>`;
+                });
+                emptyEl.style.display = 'none';
+                tableEl.style.display = 'block';
+            } else {
+                emptyEl.style.display = 'block';
+                tableEl.style.display = 'none';
+            }
+            countEl.textContent = result.result_count + ' 只';
+        } else {
+            showToast(`出错: ${result.error}`, 'error');
+        }
+    } catch (e) {
+        showToast('请求失败: ' + e.message, 'error');
+    }
+
+    btn.disabled = false;
+    setTimeout(() => { statusEl.style.display = 'none'; }, 3000);
+}
+</script>
+{% endblock %}

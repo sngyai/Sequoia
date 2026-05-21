@@ -1,0 +1,19 @@
+services:
+  a-stock:
+    build: .
+    container_name: a-stock
+
+    restart: always
+
+    env_file:
+      - .env
+
+    volumes:
+      - ./logs:/app/logs
+      - ./data:/app/data
+
+    logging:
+      driver: json-file
+      options:
+        max-size: "50m"
+        max-file: "3"

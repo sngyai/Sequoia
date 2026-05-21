@@ -1,0 +1,1 @@
+15 19 * * 1-5 python main.py >> /app/logs/log.txt 2>&1

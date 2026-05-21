@@ -10,7 +10,12 @@ dependencies = [
     "rich>=13.0",
     "pandas>=2.0",
     "requests>=2.31",
+    "python-dotenv",
 ]
+
+[tool.setuptools.packages.find]
+include = ["sequoia_x*"]
+exclude = ["data*", "logs*"]
 
 [project.optional-dependencies]
 dev = [

@@ -19,6 +19,9 @@ ENV/
 # 数据库文件
 data/*.db
 
+# MVP 运行输出
+outputs/
+
 # 环境变量
 .env
 

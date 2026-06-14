@@ -19,6 +19,9 @@ class FeishuNotifier:
     则 fallback 到 Settings.feishu_webhook_url。
     """
 
+    # 飞书推送频率限制：两次推送最小间隔（秒）
+    _SEND_INTERVAL = 2.0
+
     def __init__(self, settings: Settings) -> None:
         """
         初始化 FeishuNotifier。
@@ -27,6 +30,7 @@ class FeishuNotifier:
             settings: Settings 实例，提供 Webhook URL 配置。
         """
         self.settings = settings
+        self._last_send_time: float = 0.0
 
     @staticmethod
     def _to_xueqiu_code(code: str) -> str:
@@ -114,6 +118,14 @@ class FeishuNotifier:
         Raises:
             不抛出异常，HTTP 失败时记录 ERROR 日志。
         """
+        import time as _time
+
+        # 避免飞书频率限制：两次推送间隔至少 2 秒
+        now = _time.time()
+        elapsed = now - self._last_send_time
+        if elapsed < self._SEND_INTERVAL:
+            _time.sleep(self._SEND_INTERVAL - elapsed)
+
         url = self.settings.get_webhook_url(webhook_key)
         payload = self._build_card(symbols, strategy_name)
 
@@ -124,6 +136,7 @@ class FeishuNotifier:
                 headers={"Content-Type": "application/json"},
                 timeout=10,
             )
+            self._last_send_time = _time.time()
             # 解析飞书真正的返回体
             resp_json = resp.json()
 

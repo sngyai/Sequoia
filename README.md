@@ -50,6 +50,9 @@ uv sync
 
 # 或者 pip
 pip install .
+
+# 进入虚拟环境
+.\.venv\Scripts\activate
 ```
 
 ### 2. 配置环境变量

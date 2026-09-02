@@ -18,7 +18,7 @@ socket.setdefaulttimeout(10.0)
 from sequoia_x.core.config import get_settings
 from sequoia_x.core.logger import get_logger
 from sequoia_x.data.engine import DataEngine
-from sequoia_x.notify.feishu import FeishuNotifier
+from sequoia_x.notify.facade import NotifyFacade
 from sequoia_x.strategy.base import BaseStrategy
 from sequoia_x.strategy.high_tight_flag import HighTightFlagStrategy
 from sequoia_x.strategy.limit_up_shakeout import LimitUpShakeoutStrategy
@@ -73,7 +73,7 @@ def main() -> None:
             PrivatePlacementStrategy(engine=engine, settings=settings),
         ]
 
-        notifier = FeishuNotifier(settings)
+        notifier = NotifyFacade(settings)
 
         # 5. 遍历策略，有结果则推送至对应机器人
         for strategy in strategies:

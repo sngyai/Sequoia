@@ -2,6 +2,8 @@
 
 > A 股量化选股系统 V2 | A-Share Quantitative Stock Selection System V2
 
+**中文 | [English](README.en.md)**
+
 ---
 
 ## 简介 | Introduction

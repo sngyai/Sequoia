@@ -24,45 +24,60 @@ class TurtleTradeStrategy(BaseStrategy):
     _MIN_BARS: int = 21  # 至少需要 21 根 K 线（20日窗口 + 当日）
 
     def _get_market_caps(self, symbols: list[str]) -> dict[str, float]:
-        """通过 baostock 查询候选股票的流通市值（不复权收盘价 × 流通股本）。
+        """估算候选股票的流通市值，用于排序（完全本地化，不依赖 baostock）。
 
-        流通股本 = 成交量 / (换手率% / 100)
-        流通市值 = 流通股本 × 不复权收盘价
+        1) 从本地库取每只候选最新一行的「流通股本」(outstanding_share, 真实股数)
+        2) 取一次新浪快照(stock_zh_a_spot)的「最新价」(不复权)做市值估算：
+           cap = 流通股本 × 最新价
+        任何一步失败都优雅降级（退化为按流通股本排序），不会让选股崩溃。
         """
-        from datetime import date
+        import sqlite3
 
-        import baostock as bs
+        db_path = self.settings.db_path
+        caps: dict[str, float] = {}
 
-        today_str = date.today().strftime("%Y-%m-%d")
-        market_caps: dict[str, float] = {}
-
-        bs.login()
+        # 1) 取各候选最新流通股本
         try:
-            for symbol in symbols:
-                bs_code = self.engine._to_baostock_code(symbol)
-                rs = bs.query_history_k_data_plus(
-                    bs_code,
-                    "close,volume,turn",
-                    start_date=today_str,
-                    end_date=today_str,
-                    frequency="d",
-                    adjustflag="3",  # 不复权，真实价格
-                )
-                while rs.next():
-                    row = rs.get_row_data()
-                    try:
-                        close = float(row[0])
-                        volume = float(row[1])
-                        turn = float(row[2])
-                        if turn > 0:
-                            circulating_shares = volume / (turn / 100)
-                            market_caps[symbol] = circulating_shares * close
-                    except (ValueError, ZeroDivisionError):
-                        continue
-        finally:
-            bs.logout()
+            with sqlite3.connect(db_path) as conn:
+                for sym in symbols:
+                    row = conn.execute(
+                        "SELECT outstanding_share FROM stock_daily "
+                        "WHERE symbol=? ORDER BY date DESC LIMIT 1",
+                        (sym,),
+                    ).fetchone()
+                    if row and row[0] is not None:
+                        caps[sym] = float(row[0])
+        except Exception as exc:  # noqa: BLE001
+            logger.warning(f"读取流通股本失败：{exc}")
+            return {}
 
-        return market_caps
+        if not caps:
+            return {}
+
+        # 2) 取新浪最新价，算市值
+        try:
+            import akshare as ak
+
+            spot = ak.stock_zh_a_spot()
+            price_map: dict[str, float] = {}
+            for _, r in spot.iterrows():
+                code = str(r.get("代码", "")).zfill(6)
+                price = r.get("最新价")
+                try:
+                    price_map[code] = float(price)
+                except (TypeError, ValueError):
+                    continue
+            for sym in list(caps):
+                p = price_map.get(sym)
+                if p:
+                    caps[sym] = caps[sym] * p
+                # 拿不到最新价则保留流通股本原值（按股数排序，仍是合理的市值代理）
+        except Exception as exc:  # noqa: BLE001
+            logger.warning(
+                f"新浪最新价获取失败，TurtleTrade 市值排序退化为按流通股本：{exc}"
+            )
+
+        return caps
 
     def run(self) -> list[str]:
         """

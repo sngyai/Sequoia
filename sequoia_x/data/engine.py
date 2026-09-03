@@ -22,6 +22,7 @@ CREATE TABLE IF NOT EXISTS stock_daily (
     close    REAL,
     volume   REAL,
     turnover REAL,
+    outstanding_share REAL,
     UNIQUE (symbol, date)
 );
 """

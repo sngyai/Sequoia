@@ -139,7 +139,10 @@ class DataEngine:
             logger.info("无新数据（可能非交易日）")
             return 0
 
-        df = pd.DataFrame(all_rows, columns=["symbol", "date", "open", "high", "low", "close", "volume", "turnover"])
+        df = pd.DataFrame(
+            all_rows,
+            columns=["symbol", "date", "open", "high", "low", "close", "volume", "turnover"],
+        )
         for col in ["open", "high", "low", "close", "volume", "turnover"]:
             df[col] = pd.to_numeric(df[col], errors="coerce")
         df = df.dropna(subset=["close"])
@@ -147,9 +150,18 @@ class DataEngine:
 
         count = len(df)
         with sqlite3.connect(self.db_path) as conn:
-            for d in df["date"].unique().tolist():
-                conn.execute("DELETE FROM stock_daily WHERE date = ?", (d,))
-            df.to_sql("stock_daily", conn, if_exists="append", index=False, method="multi", chunksize=500)
+            conn.executemany(
+                "DELETE FROM stock_daily WHERE symbol = ? AND date = ?",
+                df[["symbol", "date"]].itertuples(index=False, name=None),
+            )
+            df.to_sql(
+                "stock_daily",
+                conn,
+                if_exists="append",
+                index=False,
+                method="multi",
+                chunksize=500,
+            )
             conn.commit()
 
         logger.info(f"sync_today_bulk: 写入 {count} 条数据")

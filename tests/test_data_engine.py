@@ -2,11 +2,13 @@
 
 import sqlite3
 import tempfile
-from datetime import date
+from datetime import date, timedelta
 from pathlib import Path
+from unittest.mock import patch
 
 import pandas as pd
-from hypothesis import given, settings as h_settings
+from hypothesis import given
+from hypothesis import settings as h_settings
 from hypothesis import strategies as st
 
 from sequoia_x.core.config import Settings
@@ -51,3 +53,44 @@ def test_unique_symbol_date_constraint(symbol: str, trade_date: date) -> None:
                 (symbol, str(trade_date)),
             ).fetchone()[0]
         assert count == 1
+
+
+def test_sync_today_bulk_preserves_other_symbols_on_same_date(tmp_path: Path) -> None:
+    """增量同步部分股票时，不应删除其他股票当天已有的数据。"""
+    engine, _ = make_engine_in(str(tmp_path))
+    today = date.today()
+    yesterday = today - timedelta(days=1)
+
+    conn = sqlite3.connect(engine.db_path)
+    try:
+        conn.executemany(
+            """INSERT INTO stock_daily
+            (symbol, date, open, high, low, close, volume, turnover)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
+            [
+                ("000001", str(today), 10, 11, 9, 10.5, 1000, 10500),
+                ("000002", str(yesterday), 20, 21, 19, 20.5, 2000, 41000),
+            ],
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+    fetched_rows = [
+        ["000002", str(today), "21", "22", "20", "21.5", "2100", "45150"]
+    ]
+
+    with patch("multiprocessing.Pool") as pool_class:
+        pool_class.return_value.__enter__.return_value.map.return_value = [fetched_rows]
+        assert engine.sync_today_bulk() == 1
+
+    conn = sqlite3.connect(engine.db_path)
+    try:
+        current_symbols = conn.execute(
+            "SELECT symbol FROM stock_daily WHERE date = ? ORDER BY symbol",
+            (str(today),),
+        ).fetchall()
+    finally:
+        conn.close()
+
+    assert current_symbols == [("000001",), ("000002",)]

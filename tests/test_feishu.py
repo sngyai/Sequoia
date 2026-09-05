@@ -4,7 +4,6 @@ import json
 import logging
 from unittest.mock import MagicMock, patch
 
-import pytest
 from hypothesis import given, settings as h_settings
 from hypothesis import strategies as st
 
@@ -20,6 +19,16 @@ def make_settings(webhook_url: str = "https://example.com/default") -> Settings:
     )
 
 
+def patch_stock_names(mapping: dict[str, str] | None = None):
+    """屏蔽 _build_card 内部的 baostock 股票名称查询。
+
+    _get_stock_names 会对每个 symbol 发一次真实网络请求，测试必须拦掉：
+    否则用例既慢又依赖外网（曾导致 hypothesis DeadlineExceeded）。
+    名称缺失时 _build_card 会退回展示雪球代码，断言不受影响。
+    """
+    return patch.object(FeishuNotifier, "_get_stock_names", return_value=mapping or {})
+
+
 # Feature: sequoia-x-v2, Property 10: 飞书通知包含所有选股结果
 @given(
     symbols=st.lists(
@@ -33,7 +42,7 @@ def test_notification_contains_all_symbols(symbols: list[str]) -> None:
     settings = make_settings()
     notifier = FeishuNotifier(settings)
 
-    with patch("requests.post") as mock_post:
+    with patch_stock_names(), patch("requests.post") as mock_post:
         mock_post.return_value = MagicMock(status_code=200)
         notifier.send(symbols=symbols, strategy_name="TestStrategy")
 
@@ -54,7 +63,7 @@ def test_notification_uses_config_url(webhook_url: str) -> None:
     settings = make_settings(webhook_url=webhook_url)
     notifier = FeishuNotifier(settings)
 
-    with patch("requests.post") as mock_post:
+    with patch_stock_names(), patch("requests.post") as mock_post:
         mock_post.return_value = MagicMock(status_code=200)
         notifier.send(symbols=["000001"], strategy_name="Test", webhook_key="default")
 
@@ -67,27 +76,26 @@ def test_notification_uses_config_url(webhook_url: str) -> None:
 @h_settings(max_examples=50)
 def test_http_failure_logs_error(status_code: int) -> None:
     """属性 12：非 200 响应时，send() 应记录 ERROR 级别日志，不抛出异常。"""
-    import logging as _logging
     import sequoia_x.notify.feishu as feishu_module
 
     settings = make_settings()
     notifier = FeishuNotifier(settings)
 
     # feishu logger 设置了 propagate=False，需直接在其上挂 handler
-    feishu_logger = _logging.getLogger(feishu_module.__name__)
-    log_records: list[_logging.LogRecord] = []
+    feishu_logger = logging.getLogger(feishu_module.__name__)
+    log_records: list[logging.LogRecord] = []
 
-    class _ListHandler(_logging.Handler):
-        def emit(self, record: _logging.LogRecord) -> None:
+    class _ListHandler(logging.Handler):
+        def emit(self, record: logging.LogRecord) -> None:
             log_records.append(record)
 
-    handler = _ListHandler(_logging.ERROR)
+    handler = _ListHandler(logging.ERROR)
     feishu_logger.addHandler(handler)
     try:
-        with patch("requests.post") as mock_post:
+        with patch_stock_names(), patch("requests.post") as mock_post:
             mock_post.return_value = MagicMock(status_code=status_code, text="error")
             notifier.send(symbols=["000001"], strategy_name="Test")
     finally:
         feishu_logger.removeHandler(handler)
 
-    assert any(r.levelno == _logging.ERROR for r in log_records)
+    assert any(r.levelno == logging.ERROR for r in log_records)

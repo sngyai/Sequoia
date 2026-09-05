@@ -1,6 +1,8 @@
 """数据引擎模块：负责 SQLite 行情数据存储与 baostock 增量同步。"""
 
 import sqlite3
+from collections.abc import Iterator
+from contextlib import contextmanager
 from pathlib import Path
 
 import pandas as pd
@@ -9,6 +11,28 @@ from sequoia_x.core.config import Settings
 from sequoia_x.core.logger import get_logger
 
 logger = get_logger(__name__)
+
+
+@contextmanager
+def _connect(db_path: str) -> Iterator[sqlite3.Connection]:
+    """打开 SQLite 连接，退出时提交事务并**关闭连接**。
+
+    `with sqlite3.connect(...)` 只负责提交/回滚事务，并不关闭连接——
+    连接要等垃圾回收才释放。这会导致：
+      - Windows 上文件句柄未释放，临时数据库文件无法删除（测试失败）
+      - 常驻进程（Web 服务）中每次查询都残留一个连接，句柄持续累积
+
+    因此数据层统一通过本函数获取连接，不要直接写 `with sqlite3.connect(...)`。
+
+    Yields:
+        sqlite3.Connection: 事务语义与原先一致（正常退出提交，异常回滚）。
+    """
+    conn = sqlite3.connect(db_path)
+    try:
+        with conn:
+            yield conn
+    finally:
+        conn.close()
 
 
 _CREATE_TABLE_SQL = """
@@ -63,14 +87,14 @@ class DataEngine:
 
     def _init_db(self) -> None:
         Path(self.db_path).parent.mkdir(parents=True, exist_ok=True)
-        with sqlite3.connect(self.db_path) as conn:
+        with _connect(self.db_path) as conn:
             conn.execute(_CREATE_TABLE_SQL)
             conn.execute(_CREATE_INDEX_SQL)
             conn.commit()
         logger.info(f"数据库初始化完成：{self.db_path}")
 
     def _get_last_date(self, symbol: str) -> str | None:
-        with sqlite3.connect(self.db_path) as conn:
+        with _connect(self.db_path) as conn:
             row = conn.execute(
                 "SELECT MAX(date) FROM stock_daily WHERE symbol = ?",
                 (symbol,),
@@ -78,7 +102,7 @@ class DataEngine:
         return row[0] if row and row[0] else None
 
     def get_ohlcv(self, symbol: str) -> pd.DataFrame:
-        with sqlite3.connect(self.db_path) as conn:
+        with _connect(self.db_path) as conn:
             df = pd.read_sql(
                 "SELECT * FROM stock_daily WHERE symbol = ? ORDER BY date",
                 conn,
@@ -102,7 +126,7 @@ class DataEngine:
         today_str = date.today().strftime("%Y-%m-%d")
 
         tasks = []
-        with sqlite3.connect(self.db_path) as conn:
+        with _connect(self.db_path) as conn:
             rows = conn.execute(
                 "SELECT symbol, MAX(date) FROM stock_daily GROUP BY symbol"
             ).fetchall()
@@ -146,7 +170,7 @@ class DataEngine:
         df = df[df["volume"] > 0]
 
         count = len(df)
-        with sqlite3.connect(self.db_path) as conn:
+        with _connect(self.db_path) as conn:
             for d in df["date"].unique().tolist():
                 conn.execute("DELETE FROM stock_daily WHERE date = ?", (d,))
             df.to_sql("stock_daily", conn, if_exists="append", index=False, method="multi", chunksize=500)
@@ -275,7 +299,7 @@ class DataEngine:
                 df = df[["symbol", "date", "open", "high", "low", "close", "volume", "turnover"]]
 
                 try:
-                    with sqlite3.connect(self.db_path) as conn:
+                    with _connect(self.db_path) as conn:
                         df.to_sql(
                             "stock_daily", conn, if_exists="append",
                             index=False, method="multi", chunksize=500,
@@ -326,7 +350,7 @@ class DataEngine:
             bs.logout()
 
     def get_local_symbols(self) -> list[str]:
-        with sqlite3.connect(self.db_path) as conn:
+        with _connect(self.db_path) as conn:
             rows = conn.execute(
                 "SELECT DISTINCT symbol FROM stock_daily"
             ).fetchall()

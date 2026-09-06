@@ -34,7 +34,10 @@ CREATE INDEX IF NOT EXISTS idx_symbol_date ON stock_daily (symbol, date);
 def _bs_fetch_batch(tasks: list) -> list:
     """多进程 worker：独立 login，批量拉取 baostock 数据。"""
     import baostock as bs
-    bs.login()
+    lg = bs.login()
+    print('login respond error_code:'+lg.error_code)
+    print('login respond  error_msg:'+lg.error_msg)
+
     results = []
     for symbol, bs_code, start, end in tasks:
         rs = bs.query_history_k_data_plus(

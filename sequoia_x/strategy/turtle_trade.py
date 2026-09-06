@@ -21,6 +21,8 @@ class TurtleTradeStrategy(BaseStrategy):
     """
 
     webhook_key: str = "turtle"
+    strategy_name: str = "防诱多海龟"
+    strategy_descript: str = "\n1. 20日新高突破 + 成交额过亿  \n2. 今日实体阳线且必须真涨"
     _MIN_BARS: int = 21  # 至少需要 21 根 K 线（20日窗口 + 当日）
 
     def _get_market_caps(self, symbols: list[str]) -> dict[str, float]:

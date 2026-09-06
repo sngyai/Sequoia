@@ -22,6 +22,8 @@ class LimitUpShakeoutStrategy(BaseStrategy):
     """
 
     webhook_key: str = "shakeout"
+    strategy_name: str = "涨停洗盘"
+    strategy_descript: str = "\n1. 昨日涨停：昨日 close >= 前日 close x 1.095 \n2. 今日收阴：今日 close < 今日 open \n3. 今日放量：今日 volume > 昨日 volume x 2.0 \n4. 支撑不破：今日 low >= 昨日 close "
     _MIN_BARS: int = 3  # 至少需要 3 根 K 线（前日、昨日、今日）
 
     def run(self) -> list[str]:

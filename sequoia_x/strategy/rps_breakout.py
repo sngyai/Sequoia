@@ -10,6 +10,9 @@ class RpsBreakoutStrategy(BaseStrategy):
     """RPS 极强动量突破策略"""
 
     webhook_key: str = "rps"
+    strategy_name: str = "极强动量突破"
+    strategy_descript: str = "\n1.极强动量突破"
+
     rps_period: int = 120
     rps_threshold: int = 90
 

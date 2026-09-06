@@ -21,6 +21,9 @@ class PrivatePlacementStrategy(BaseStrategy):
     """
 
     webhook_key: str = "private_placement"
+    strategy_name: str = "定增公告监控"
+    strategy_descript: str = "\n筛选最近 7 天内发行日期的定向增发公告，"
+
     _LOOKBACK_DAYS: int = 7  # 回看天数，覆盖一周内的新公告
 
     def run(self) -> list[str]:

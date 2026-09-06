@@ -52,7 +52,7 @@ class FeishuNotifier:
         bs.logout()
         return mapping
 
-    def _build_card(self, symbols: list[str], strategy_name: str) -> dict:
+    def _build_card(self, symbols: list[str], strategy_name: str,strategy_descript) -> dict:
         today = date.today().strftime("%Y-%m-%d")
         names = self._get_stock_names(symbols)
 
@@ -79,7 +79,7 @@ class FeishuNotifier:
                         "tag": "div",
                         "text": {
                             "tag": "lark_md",
-                            "content": f"**日期：** {today}\n**策略：** {strategy_name}\n**选股数量：** {len(symbols)}",
+                            "content": f"**日期：** {today}\n**策略：** {strategy_descript}\n**选股数量：** {len(symbols)}",
                         },
                     },
                     {"tag": "hr"},
@@ -98,6 +98,7 @@ class FeishuNotifier:
         self,
         symbols: list[str],
         strategy_name: str,
+        strategy_descript: str,
         webhook_key: str = "default",
     ) -> None:
         """
@@ -115,7 +116,7 @@ class FeishuNotifier:
             不抛出异常，HTTP 失败时记录 ERROR 日志。
         """
         url = self.settings.get_webhook_url(webhook_key)
-        payload = self._build_card(symbols, strategy_name)
+        payload = self._build_card(symbols, strategy_name, strategy_descript)
 
         try:
             resp = requests.post(

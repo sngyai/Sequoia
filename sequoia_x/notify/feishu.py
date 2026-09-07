@@ -52,7 +52,7 @@ class FeishuNotifier:
         bs.logout()
         return mapping
 
-    def _build_card(self, symbols: list[str], strategy_name: str,strategy_descript) -> dict:
+    def _build_card(self, symbols: list[str], strategy_name: str,strategy_descript: str) -> dict:
         today = date.today().strftime("%Y-%m-%d")
         names = self._get_stock_names(symbols)
 

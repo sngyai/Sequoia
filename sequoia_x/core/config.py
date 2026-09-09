@@ -8,6 +8,7 @@ class Settings(BaseSettings):
     start_date: str = "2024-01-01"
     feishu_webhook_url: str  # 必填字段，缺失时抛出 ValidationError
     strategy_webhooks: dict[str, str] = {}
+    shortlist_size: int = 5  # 每日精选名单数量（环境变量 SHORTLIST_SIZE）
 
     model_config = SettingsConfigDict(
         env_file=".env",

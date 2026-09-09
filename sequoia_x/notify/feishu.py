@@ -39,7 +39,25 @@ class FeishuNotifier:
 
     @staticmethod
     def _get_stock_names(symbols: list[str]) -> dict[str, str]:
-        """通过 baostock 批量查询股票名称，返回 {code: name} 映射。"""
+        """批量查询股票名称，返回 {code: name} 映射。
+
+        优先 akshare 一次性拉取全量名称表（单次 HTTP，盘中更稳），
+        失败则回退 baostock 逐只查询。
+        """
+        try:
+            import akshare as ak
+
+            df = ak.stock_info_a_code_name()
+            mapping = {
+                str(code): str(name)
+                for code, name in zip(df["code"], df["name"])
+            }
+            if mapping:
+                return {code: mapping.get(code, code) for code in symbols}
+            logger.warning("akshare 返回空名称表，回退 baostock")
+        except Exception as exc:
+            logger.warning(f"akshare 查询股票名称失败，回退 baostock: {exc}")
+
         import baostock as bs
         bs.login()
         mapping = {}
@@ -52,7 +70,12 @@ class FeishuNotifier:
         bs.logout()
         return mapping
 
-    def _build_card(self, symbols: list[str], strategy_name: str) -> dict:
+    def _build_card(
+        self,
+        symbols: list[str],
+        strategy_name: str,
+        symbol_notes: dict[str, str] | None = None,
+    ) -> dict:
         today = date.today().strftime("%Y-%m-%d")
         names = self._get_stock_names(symbols)
 
@@ -60,9 +83,15 @@ class FeishuNotifier:
         for code in symbols:
             xq_code = self._to_xueqiu_code(code)
             name = names.get(code, xq_code)
+            if symbol_notes and code in symbol_notes:
+                name = f"{name}（{symbol_notes[code]}）"
             links.append(f"[{name}](https://xueqiu.com/S/{xq_code})")
 
-        symbol_text = " ".join(links) if links else "（无选股结果）"
+        # 精选名单（带附注）逐行展示便于阅读；普通策略推送保持行内紧凑
+        if symbol_notes and links:
+            symbol_text = "\n".join(f"• {link}" for link in links)
+        else:
+            symbol_text = " ".join(links) if links else "（无选股结果）"
 
         return {
             "msg_type": "interactive",
@@ -99,6 +128,7 @@ class FeishuNotifier:
         symbols: list[str],
         strategy_name: str,
         webhook_key: str = "default",
+        symbol_notes: dict[str, str] | None = None,
     ) -> None:
         """
         将选股结果格式化为飞书卡片消息并 POST 至对应 Webhook。
@@ -110,12 +140,13 @@ class FeishuNotifier:
             symbols: 选股结果代码列表。
             strategy_name: 策略名称，用于卡片标题。
             webhook_key: 策略标识，用于路由到对应飞书机器人。
+            symbol_notes: 可选，{代码: 附注}，追加在卡片链接文字后（如命中策略）。
 
         Raises:
             不抛出异常，HTTP 失败时记录 ERROR 日志。
         """
         url = self.settings.get_webhook_url(webhook_key)
-        payload = self._build_card(symbols, strategy_name)
+        payload = self._build_card(symbols, strategy_name, symbol_notes)
 
         try:
             resp = requests.post(

@@ -39,7 +39,25 @@ class FeishuNotifier:
 
     @staticmethod
     def _get_stock_names(symbols: list[str]) -> dict[str, str]:
-        """通过 baostock 批量查询股票名称，返回 {code: name} 映射。"""
+        """批量查询股票名称，返回 {code: name} 映射。
+
+        优先 akshare 一次性拉取全量名称表（单次 HTTP，盘中更稳），
+        失败则回退 baostock 逐只查询。
+        """
+        try:
+            import akshare as ak
+
+            df = ak.stock_info_a_code_name()
+            mapping = {
+                str(code): str(name)
+                for code, name in zip(df["code"], df["name"])
+            }
+            if mapping:
+                return {code: mapping.get(code, code) for code in symbols}
+            logger.warning("akshare 返回空名称表，回退 baostock")
+        except Exception as exc:
+            logger.warning(f"akshare 查询股票名称失败，回退 baostock: {exc}")
+
         import baostock as bs
         bs.login()
         mapping = {}

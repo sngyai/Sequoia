@@ -84,10 +84,14 @@ class FeishuNotifier:
             xq_code = self._to_xueqiu_code(code)
             name = names.get(code, xq_code)
             if symbol_notes and code in symbol_notes:
-                name = f"{name}｜{symbol_notes[code]}"
+                name = f"{name}（{symbol_notes[code]}）"
             links.append(f"[{name}](https://xueqiu.com/S/{xq_code})")
 
-        symbol_text = " ".join(links) if links else "（无选股结果）"
+        # 精选名单（带附注）逐行展示便于阅读；普通策略推送保持行内紧凑
+        if symbol_notes and links:
+            symbol_text = "\n".join(f"• {link}" for link in links)
+        else:
+            symbol_text = " ".join(links) if links else "（无选股结果）"
 
         return {
             "msg_type": "interactive",

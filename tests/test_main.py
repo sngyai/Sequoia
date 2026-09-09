@@ -21,3 +21,13 @@ def test_main_exits_nonzero_on_exception(error_msg: str) -> None:
         with pytest.raises(SystemExit) as exc_info:
             main_module.main()
         assert exc_info.value.code != 0
+
+
+# Feature: 修复 Ctrl+C 中断时的裸 traceback
+def test_main_exits_cleanly_on_keyboard_interrupt() -> None:
+    """Ctrl+C 中断应以退出码 130 干净退出，不再抛裸 traceback。"""
+    with patch("sys.argv", ["main.py"]):
+        with patch.object(main_module, "get_settings", side_effect=KeyboardInterrupt):
+            with pytest.raises(SystemExit) as exc_info:
+                main_module.main()
+            assert exc_info.value.code == 130

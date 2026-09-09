@@ -331,3 +331,12 @@ class DataEngine:
                 "SELECT DISTINCT symbol FROM stock_daily"
             ).fetchall()
         return [row[0] for row in rows]
+
+    def get_latest_turnover(self) -> dict[str, float]:
+        """返回最近一个交易日全市场 {symbol: turnover}（成交额，元）。"""
+        with sqlite3.connect(self.db_path) as conn:
+            rows = conn.execute(
+                "SELECT symbol, turnover FROM stock_daily "
+                "WHERE date = (SELECT MAX(date) FROM stock_daily)"
+            ).fetchall()
+        return {symbol: (turnover or 0.0) for symbol, turnover in rows}

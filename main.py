@@ -17,6 +17,7 @@ socket.setdefaulttimeout(10.0)
 
 from sequoia_x.core.config import get_settings
 from sequoia_x.core.logger import get_logger
+from sequoia_x.core.shortlist import build_shortlist
 from sequoia_x.data.engine import DataEngine
 from sequoia_x.notify.feishu import FeishuNotifier
 from sequoia_x.strategy.base import BaseStrategy
@@ -76,11 +77,13 @@ def main() -> None:
         notifier = FeishuNotifier(settings)
 
         # 5. 遍历策略，有结果则推送至对应机器人
+        strategy_results: dict[str, list[str]] = {}
         for strategy in strategies:
             strategy_name = type(strategy).__name__
             logger.info(f"执行策略：{strategy_name}")
 
             selected: list[str] = strategy.run()
+            strategy_results[strategy_name] = selected
             logger.info(f"{strategy_name} 选出 {len(selected)} 只股票")
 
             if selected:
@@ -91,6 +94,18 @@ def main() -> None:
                 )
             else:
                 logger.info(f"{strategy_name} 无选股结果，跳过推送")
+
+        # 6. 精选漏斗：多策略共振 + 流动性过滤，输出每日 Top N
+        shortlist = build_shortlist(strategy_results, engine, top_n=settings.shortlist_size)
+        if shortlist:
+            notifier.send(
+                symbols=[item.code for item in shortlist],
+                strategy_name=f"今日精选 TOP{len(shortlist)}",
+                webhook_key="shortlist",
+                symbol_notes={item.code: item.labels for item in shortlist},
+            )
+        else:
+            logger.info("今日精选为空，跳过推送")
 
     except Exception:
         try:

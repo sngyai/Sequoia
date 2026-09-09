@@ -33,6 +33,9 @@ python main.py --backfill     # 回填模式：全市场历史K线一次性灌�
 | **LimitUpShakeout** | 涨停洗盘回踩确认 |
 | **UptrendLimitDown** | 上升趋势中的跌停反包 |
 | **RpsBreakout** | 欧奈尔 RPS 相对强度突破 |
+| **PrivatePlacement** | 定增公告监控（事件线索推送） |
+
+> 📖 每个策略选出股票后该怎么操作（买点/止损/持有/失效场景），见 [策略实操手册](docs/策略实操手册.md)。
 
 ---
 
@@ -95,7 +98,8 @@ Sequoia-X/
 ├── sequoia_x/
 │   ├── core/
 │   │   ├── config.py            # Pydantic-settings 配置管理
-│   │   └── logger.py            # rich 结构化日志
+│   │   ├── logger.py            # rich 结构化日志
+│   │   └── shortlist.py         # 精选漏斗：多策略共振 Top N（剔除ST+流动性过滤）
 │   ├── data/
 │   │   └── engine.py            # 数据引擎（baostock 回填 + 增量同步 + SQLite）
 │   ├── strategy/

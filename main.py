@@ -92,6 +92,14 @@ def main() -> None:
             else:
                 logger.info(f"{strategy_name} 无选股结果，跳过推送")
 
+    except KeyboardInterrupt:
+        try:
+            _logger = get_logger(__name__)
+            _logger.warning("收到 Ctrl+C，已中断退出")
+        except Exception:
+            pass
+        sys.exit(130)
+
     except Exception:
         try:
             _logger = get_logger(__name__)

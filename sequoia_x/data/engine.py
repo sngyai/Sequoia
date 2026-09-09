@@ -53,6 +53,24 @@ def _bs_fetch_batch(tasks: list) -> list:
     return results
 
 
+def _close_baostock_quietly() -> None:
+    """本地关闭 baostock 连接，不发送 logout 请求。
+
+    用于连接已不可信的场合（查询被 Ctrl+C 打断、请求超时）：socket 缓冲区里
+    可能残留半截报文，此时再发请求会读到错位数据，抛
+    "'utf-8' codec can't decode bytes in position ...: unexpected end of data"。
+    """
+    import baostock.common.context as bs_context
+
+    sock = getattr(bs_context, "default_socket", None)
+    if sock is not None:
+        try:
+            sock.close()
+        except Exception:
+            pass
+        bs_context.default_socket = None
+
+
 class DataEngine:
     """行情数据引擎，负责 SQLite 存储和 baostock 数据同步。"""
 
@@ -186,6 +204,7 @@ class DataEngine:
         skipped = 0
         failed = 0
         since_reconnect = 0
+        completed = False
 
         try:
             for i, symbol in enumerate(symbols):
@@ -245,8 +264,8 @@ class DataEngine:
                                 f"[{symbol}] 第{attempt + 1}次失败: {exc}，{wait}s 后重试"
                             )
                             time.sleep(wait)
-                            # 重连 baostock
-                            bs.logout()
+                            # 重连 baostock：失败连接已失步，只本地强关，避免 logout 读到半截报文
+                            _close_baostock_quietly()
                             time.sleep(1)
                             _login()
                         else:
@@ -291,8 +310,13 @@ class DataEngine:
                         f"成功 {success} 跳过 {skipped} 失败 {failed}"
                     )
 
+            completed = True
         finally:
-            bs.logout()
+            # 被中断/异常退出时连接已失步，只本地强关，避免 logout 读到半截报文
+            if completed:
+                bs.logout()
+            else:
+                _close_baostock_quietly()
 
         logger.info(f"回填完成 — 成功: {success} | 跳过: {skipped} | 失败: {failed}")
 
@@ -307,6 +331,7 @@ class DataEngine:
             logger.error(f"baostock 登录失败: {lg.error_msg}")
             return []
 
+        completed = False
         try:
             rs = bs.query_stock_basic(code_name="", code="")
             symbols = []
@@ -318,12 +343,17 @@ class DataEngine:
                 if status == "1" and stock_type == "1":
                     symbols.append(code.split(".")[1])  # 提取纯数字代码
             logger.info(f"获取股票列表完成，共 {len(symbols)} 只")
+            completed = True
             return symbols
         except Exception as e:
             logger.error(f"获取股票列表失败: {e}")
             return []
         finally:
-            bs.logout()
+            # 被中断/异常退出时连接已失步，只本地强关，避免 logout 读到半截报文
+            if completed:
+                bs.logout()
+            else:
+                _close_baostock_quietly()
 
     def get_local_symbols(self) -> list[str]:
         with sqlite3.connect(self.db_path) as conn:

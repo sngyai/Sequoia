@@ -1,14 +1,19 @@
 """数据引擎属性测试。"""
 
 import sqlite3
+import sys
 import tempfile
 from datetime import date
 from pathlib import Path
+from unittest.mock import MagicMock, patch
 
+import baostock.common.context as bs_context
 import pandas as pd
+import pytest
 from hypothesis import given, settings as h_settings
 from hypothesis import strategies as st
 
+import sequoia_x.data.engine as engine_module
 from sequoia_x.core.config import Settings
 from sequoia_x.data.engine import DataEngine
 
@@ -51,3 +56,90 @@ def test_unique_symbol_date_constraint(symbol: str, trade_date: date) -> None:
                 (symbol, str(trade_date)),
             ).fetchone()[0]
         assert count == 1
+
+
+def _fake_baostock() -> MagicMock:
+    """构造登录成功的 baostock 替身。"""
+    fake_bs = MagicMock()
+    fake_bs.login.return_value = MagicMock(error_code="0")
+    return fake_bs
+
+
+def test_get_all_symbols_quiet_close_on_interrupt(tmp_path: Path) -> None:
+    """Ctrl+C 打断查询时只本地关闭连接，不再发 logout 请求。"""
+    engine, _ = make_engine_in(str(tmp_path))
+    fake_bs = _fake_baostock()
+    fake_bs.query_stock_basic.side_effect = KeyboardInterrupt
+
+    with patch.dict(sys.modules, {"baostock": fake_bs}):
+        with patch.object(engine_module, "_close_baostock_quietly") as quiet_close:
+            with pytest.raises(KeyboardInterrupt):
+                engine.get_all_symbols()
+
+    quiet_close.assert_called_once()
+    fake_bs.logout.assert_not_called()
+
+
+def test_get_all_symbols_logout_on_success(tmp_path: Path) -> None:
+    """正常结束时走 logout，不做本地强关。"""
+    engine, _ = make_engine_in(str(tmp_path))
+    fake_bs = _fake_baostock()
+    rs = MagicMock()
+    rs.next.side_effect = [True, False]
+    rs.get_row_data.return_value = ["sh.600000", "浦发银行", "1999-11-10", "1", "1", "1"]
+    fake_bs.query_stock_basic.return_value = rs
+
+    with patch.dict(sys.modules, {"baostock": fake_bs}):
+        with patch.object(engine_module, "_close_baostock_quietly") as quiet_close:
+            symbols = engine.get_all_symbols()
+
+    assert symbols == ["600000"]
+    fake_bs.logout.assert_called_once()
+    quiet_close.assert_not_called()
+
+
+def test_backfill_quiet_close_on_interrupt(tmp_path: Path) -> None:
+    """回填被 Ctrl+C 打断时只本地关闭连接，不再发 logout 请求。"""
+    engine, _ = make_engine_in(str(tmp_path))
+    fake_bs = _fake_baostock()
+    fake_bs.query_history_k_data_plus.side_effect = KeyboardInterrupt
+
+    with patch.dict(sys.modules, {"baostock": fake_bs}):
+        with patch.object(engine_module, "_close_baostock_quietly") as quiet_close:
+            with pytest.raises(KeyboardInterrupt):
+                engine.backfill(["600000"])
+
+    quiet_close.assert_called_once()
+    fake_bs.logout.assert_not_called()
+
+
+def test_backfill_logout_on_success(tmp_path: Path) -> None:
+    """回填正常跑完应走 logout。"""
+    engine, _ = make_engine_in(str(tmp_path))
+    fake_bs = _fake_baostock()
+    rs = MagicMock()
+    rs.error_code = "0"
+    rs.fields = ["date", "open", "high", "low", "close", "volume", "amount"]
+    rs.next.side_effect = [True, False]
+    rs.get_row_data.return_value = [
+        "2024-01-02", "10", "11", "9", "10.5", "1000", "10500",
+    ]
+    fake_bs.query_history_k_data_plus.return_value = rs
+
+    with patch.dict(sys.modules, {"baostock": fake_bs}):
+        with patch.object(engine_module, "_close_baostock_quietly") as quiet_close:
+            engine.backfill(["600000"])
+
+    fake_bs.logout.assert_called_once()
+    quiet_close.assert_not_called()
+
+
+def test_close_baostock_quietly_closes_socket(monkeypatch: pytest.MonkeyPatch) -> None:
+    """本地强关应关闭 socket 并清空 baostock 的全局连接。"""
+    fake_sock = MagicMock()
+    monkeypatch.setattr(bs_context, "default_socket", fake_sock, raising=False)
+
+    engine_module._close_baostock_quietly()
+
+    fake_sock.close.assert_called_once()
+    assert getattr(bs_context, "default_socket", None) is None

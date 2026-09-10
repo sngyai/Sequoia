@@ -62,6 +62,7 @@ class DataEngine:
     def __init__(self, settings: Settings) -> None:
         self.db_path: str = settings.db_path
         self.start_date: str = settings.start_date
+        self.baostock_tasks: int = settings.baostock_tasks
         self._init_db()
 
     def _init_db(self) -> None:
@@ -128,7 +129,7 @@ class DataEngine:
 
         logger.info(f"需要更新 {len(tasks)} 只股票，启动多进程并行拉取...")
 
-        n_workers = min(8, len(tasks))
+        n_workers = min(self.baostock_tasks, len(tasks))
         chunks = [tasks[i::n_workers] for i in range(n_workers)]
 
         with Pool(n_workers) as pool:

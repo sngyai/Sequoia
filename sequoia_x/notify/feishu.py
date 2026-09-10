@@ -2,7 +2,10 @@
 
 import json
 from datetime import date
-
+import threading
+from collections import defaultdict
+import sqlite3
+import baostock as bs
 import requests
 
 from sequoia_x.core.config import Settings
@@ -18,6 +21,12 @@ class FeishuNotifier:
     若 webhook_key 未在 Settings.strategy_webhooks 中配置，
     则 fallback 到 Settings.feishu_webhook_url。
     """
+    # 类级别的线程锁
+    _lock = threading.Lock()
+    # baostock 连接池
+    _bs_pool = []
+    _bs_pool_lock = threading.Lock()
+    _bs_max_pool_size = 4
 
     def __init__(self, settings: Settings) -> None:
         """
@@ -27,6 +36,7 @@ class FeishuNotifier:
             settings: Settings 实例，提供 Webhook URL 配置。
         """
         self.settings = settings
+        self.db_path = settings.db_path
 
     @staticmethod
     def _to_xueqiu_code(code: str) -> str:
@@ -38,23 +48,97 @@ class FeishuNotifier:
         return f"SZ{code}"
 
     @staticmethod
-    def _get_stock_names(symbols: list[str]) -> dict[str, str]:
-        """通过 baostock 批量查询股票名称，返回 {code: name} 映射。"""
-        import baostock as bs
-        bs.login()
-        mapping = {}
-        for code in symbols:
-            prefix = "sh" if code.startswith(("6", "9")) else "sz"
-            rs = bs.query_stock_basic(code=f"{prefix}.{code}")
-            while rs.next():
-                row = rs.get_row_data()
-                mapping[code] = row[1]  # 第2个字段是股票名称
-        bs.logout()
-        return mapping
+    def _get_stock_names(symbols: list[str], db_path: str) -> dict[str, str]:
+        """优先从本地 SQLite 批量查询股票名称，未命中再通过 baostock 批量查询，返回 {code: name} 映射。"""
+        # 使用线程安全的数据结构
+        mapping = defaultdict(str)
+        missed_codes = []
+        to_insert = []
 
-    def _build_card(self, symbols: list[str], strategy_name: str,strategy_descript: str) -> dict:
+        # 1. 确保表存在，并优先从本地 stock_name 表查询
+        with FeishuNotifier._lock:
+            with sqlite3.connect(db_path) as conn:
+                conn.execute(
+                    "CREATE TABLE IF NOT EXISTS stock_name (id INTEGER PRIMARY KEY AUTOINCREMENT, symbol TEXT NOT NULL UNIQUE, name TEXT NOT NULL)"
+                )
+                conn.execute("BEGIN TRANSACTION")
+                try:
+                    for code in symbols:
+                        row = conn.execute(
+                            "SELECT name FROM stock_name WHERE symbol = ?", (code,)
+                        ).fetchone()
+                        if row:
+                            mapping[code] = row[0]
+                            logger.debug(f"找到股票 [来源: local_db]: 代码={code}, 名称={row[0]}")
+                        else:
+                            missed_codes.append(code)
+                            logger.debug(f"未找到股票 [来源: local_db]: 代码={code}")
+                    conn.commit()
+                except Exception as e:
+                    conn.rollback()
+                    logger.error(f"本地数据库查询失败: {e}")
+                    raise
+
+        # 2. 本地未命中的部分，走 baostock 查询
+        if missed_codes:
+            bs_conn = FeishuNotifier._get_bs_connection()
+            try:
+                for code in missed_codes:
+                    # 拼接 prefix 供 baostock 使用
+                    prefix = "sh" if code.startswith(("6", "9")) else "sz"
+                    bs_code = f"{prefix}.{code}"
+                    
+                    rs = bs.query_stock_basic(code=bs_code)
+                    while rs.next():
+                        row = rs.get_row_data()
+                        mapping[code] = row[1]  # 第2个字段是股票名称
+                        to_insert.append((code, row[1]))
+                        logger.debug(f"找到股票 [来源: baostock]: 代码={code}, 名称={row[1]}")
+            finally:
+                FeishuNotifier._release_bs_connection(bs_conn)
+
+            # 3. 将 baostock 查询到的结果保存到本地 stock_name 表
+            if to_insert:
+                with FeishuNotifier._lock:
+                    with sqlite3.connect(db_path) as conn:
+                        conn.execute("BEGIN TRANSACTION")
+                        try:
+                            conn.executemany(
+                                "INSERT OR IGNORE INTO stock_name (symbol, name) VALUES (?, ?)",
+                                to_insert,
+                            )
+                            conn.commit()
+                            logger.debug(f"已将 {len(to_insert)} 条股票信息保存至本地 stock_name 表")
+                        except Exception as e:
+                            conn.rollback()
+                            logger.error(f"保存股票信息到本地数据库失败: {e}")
+                            raise
+
+        return dict(mapping)
+
+    @classmethod
+    def _get_bs_connection(cls):
+        """从连接池获取 baostock 连接"""
+        with cls._bs_pool_lock:
+            if cls._bs_pool:
+                return cls._bs_pool.pop()
+            lg = bs.login()
+            if lg.error_code != '0':
+                raise RuntimeError(f"baostock 登录失败: {lg.error_msg}")
+            return True
+
+    @classmethod
+    def _release_bs_connection(cls, conn):
+        """释放 baostock 连接到连接池"""
+        with cls._bs_pool_lock:
+            if len(cls._bs_pool) < cls._bs_max_pool_size:
+                cls._bs_pool.append(conn)
+            else:
+                bs.logout()
+
+    def _build_card(self, symbols: list[str], strategy_name: str, strategy_descript: str) -> dict:
         today = date.today().strftime("%Y-%m-%d")
-        names = self._get_stock_names(symbols)
+        names = self._get_stock_names(symbols, self.db_path)
 
         links: list[str] = []
         for code in symbols:

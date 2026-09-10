@@ -30,16 +30,28 @@ _CREATE_INDEX_SQL = """
 CREATE INDEX IF NOT EXISTS idx_symbol_date ON stock_daily (symbol, date);
 """
 
+_CREATE_STOCK_NAME_SQL = """
+CREATE TABLE IF NOT EXISTS stock_name (
+    id       INTEGER PRIMARY KEY AUTOINCREMENT,
+    symbol   TEXT    NOT NULL   UNIQUE,
+    name     TEXT    NOT NULL
+);
+"""
+
+_CREATE_STOCK_NAME_INDEX_SQL = """
+CREATE INDEX IF NOT EXISTS idx_stock_name_symbol ON stock_name (symbol);
+"""
 
 def _bs_fetch_batch(tasks: list) -> list:
     """多进程 worker：独立 login，批量拉取 baostock 数据。"""
     import baostock as bs
     lg = bs.login()
-    print('login respond error_code:'+lg.error_code)
-    print('login respond  error_msg:'+lg.error_msg)
+    logger.info(f"login respond error_code: {lg.error_code}")
+    logger.info(f"login respond  error_msg: {lg.error_msg}")
 
     results = []
     for symbol, bs_code, start, end in tasks:
+        logger.info(f"bs query: {bs_code}")
         rs = bs.query_history_k_data_plus(
             bs_code,
             "date,open,high,low,close,volume,amount",
@@ -70,6 +82,7 @@ class DataEngine:
         with sqlite3.connect(self.db_path) as conn:
             conn.execute(_CREATE_TABLE_SQL)
             conn.execute(_CREATE_INDEX_SQL)
+            conn.execute(_CREATE_STOCK_NAME_SQL)
             conn.commit()
         logger.info(f"数据库初始化完成：{self.db_path}")
 

@@ -43,28 +43,82 @@ CREATE INDEX IF NOT EXISTS idx_stock_name_symbol ON stock_name (symbol);
 """
 
 def _bs_fetch_batch(tasks: list) -> list:
-    """多进程 worker：独立 login，批量拉取 baostock 数据。"""
-    import baostock as bs
-    lg = bs.login()
-    logger.info(f"login respond error_code: {lg.error_code}")
-    logger.info(f"login respond  error_msg: {lg.error_msg}")
+    """多进程 worker：独立 login，批量拉取 baostock 数据。
 
+    Args:
+        tasks: 股票代码列表，每个元素为 (symbol, bs_code, start_date, end_date) 元组
+
+    Returns:
+        list: 获取到的数据行列表，每行格式为 [symbol, date, open, high, low, close, volume, turnover]
+    """
+    import baostock as bs
+    import time
+    from datetime import datetime
+
+    max_retries = 3
     results = []
-    for symbol, bs_code, start, end in tasks:
-        logger.info(f"bs query: {bs_code}")
-        rs = bs.query_history_k_data_plus(
-            bs_code,
-            "date,open,high,low,close,volume,amount",
-            start_date=start,
-            end_date=end,
-            frequency="d",
-            adjustflag="1",  # 后复权
-        )
-        if rs.error_code != "0":
-            continue
-        while rs.next():
-            results.append([symbol] + rs.get_row_data())
-    bs.logout()
+
+    def _login():
+        """登录 baostock，返回是否成功"""
+        lg = bs.login()
+        if lg.error_code != "0":
+            logger.error(f"baostock 登录失败: {lg.error_msg}")
+            return False
+        return True
+
+    # 登录
+    if not _login():
+        return []
+
+    try:
+        for symbol, bs_code, start, end in tasks:
+            # 带重试的查询
+            for attempt in range(max_retries):
+                try:
+                    logger.info(f"查询 {symbol} ({bs_code}) {start} 至 {end}")
+                    rs = bs.query_history_k_data_plus(
+                        bs_code,
+                        "date,open,high,low,close,volume,amount",
+                        start_date=start,
+                        end_date=end,
+                        frequency="d",
+                        adjustflag="1",  # 后复权
+                    )
+
+                    if rs.error_code != "0":
+                        raise RuntimeError(rs.error_msg)
+
+                    # 获取数据
+                    batch_data = []
+                    while rs.next():
+                        row_data = rs.get_row_data()
+                        batch_data.append([symbol] + row_data)
+                    
+                    if batch_data:
+                        results.extend(batch_data)
+                        logger.info(f"成功获取 {symbol} 数据 {len(batch_data)} 条")
+                    break
+
+                except Exception as exc:
+                    if attempt < max_retries - 1:
+                        wait = 2 ** (attempt + 1)
+                        logger.warning(
+                            f"[{symbol}] 第{attempt + 1}次失败: {exc}，{wait}s 后重试"
+                        )
+                        time.sleep(wait)
+                        # 重连 baostock
+                        bs.logout()
+                        time.sleep(1)
+                        if not _login():
+                            logger.error("重连失败，跳过当前批次")
+                            return []
+                    else:
+                        logger.error(f"[{symbol}] {max_retries}次重试均失败，跳过")
+                        break
+
+    finally:
+        bs.logout()
+
     return results
 
 

@@ -7,6 +7,7 @@ import pandas as pd
 
 from sequoia_x.core.config import Settings
 from sequoia_x.core.logger import get_logger
+import baostock.common.contants as cons
 
 logger = get_logger(__name__)
 
@@ -46,7 +47,10 @@ def _bs_fetch_batch(tasks: list) -> list:
             adjustflag="1",  # 后复权
         )
         if rs.error_code != "0":
-            continue
+            logger.error(f"拉取 {symbol} 失败：{rs.error_code},{rs.error_msg}")
+            if rs.error_code == cons.BSERR_NO_LOGIN :
+                bs.login()    #异常登出后，重新登录
+                continue
         while rs.next():
             results.append([symbol] + rs.get_row_data())
     bs.logout()
@@ -175,7 +179,7 @@ class DataEngine:
         def _login():
             lg = bs.login()
             if lg.error_code != "0":
-                logger.error(f"baostock 登录失败: {lg.error_msg}")
+                logger.error(f"baostock 登录失败: {lg.error_code},{lg.error_msg}")
                 return False
             return True
 
@@ -230,7 +234,7 @@ class DataEngine:
                         )
 
                         if rs.error_code != "0":
-                            raise RuntimeError(rs.error_msg)
+                            raise RuntimeError(f"{rs.error_code},{rs.error_msg}")
 
                         rows = []
                         while rs.next():

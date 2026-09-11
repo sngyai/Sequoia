@@ -20,6 +20,8 @@ class MaVolumeStrategy(BaseStrategy):
     """
 
     webhook_key: str = "ma_volume"
+    strategy_name: str = "均线+成交量"
+    strategy_descript: str = "\n1. 5日收盘均线上穿20日收盘均线（金叉） \n2. 当日成交量 > 20日均量的 1.5 倍（放量确认）"
 
     def run(self) -> list[str]:
         """

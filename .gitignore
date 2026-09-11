@@ -20,7 +20,7 @@ ENV/
 data/*.db
 
 # 环境变量
-.env
+#.env
 
 # 打包构建
 *.egg-info/
@@ -36,3 +36,10 @@ build/
 
 # Hypothesis 测试缓存
 .hypothesis/
+
+# 忽略目录
+Lib/
+Scripts/
+
+# 忽略文件
+pyvenv.cfg

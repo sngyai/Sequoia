@@ -21,6 +21,8 @@ class UptrendLimitDownStrategy(BaseStrategy):
     """
 
     webhook_key: str = "limit_down"
+    strategy_name: str = "上升趋势跌停"
+    strategy_descript: str = "\n1. 处于上升趋势：昨日20日均线 > 昨日60日均线 \n2. 放量跌停：今日 close <= 昨日 close x 0.905 且今日 volume > 20日均量的 2.0 倍 "
     _MIN_BARS: int = 60  # 至少需要 60 根 K 线（60日均线）
 
     def run(self) -> list[str]:

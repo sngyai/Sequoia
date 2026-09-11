@@ -21,6 +21,8 @@ class TurtleTradeStrategy(BaseStrategy):
     """
 
     webhook_key: str = "turtle"
+    strategy_name: str = "防诱多海龟"
+    strategy_descript: str = "\n1. 20日新高突破 + 成交额过亿  \n2. 今日实体阳线且必须真涨"
     _MIN_BARS: int = 21  # 至少需要 21 根 K 线（20日窗口 + 当日）
 
     def _get_market_caps(self, symbols: list[str]) -> dict[str, float]:
@@ -30,35 +32,66 @@ class TurtleTradeStrategy(BaseStrategy):
         流通市值 = 流通股本 × 不复权收盘价
         """
         from datetime import date
-
         import baostock as bs
-
         today_str = date.today().strftime("%Y-%m-%d")
         market_caps: dict[str, float] = {}
+        
+        # 先尝试登录
+        lg = bs.login()
+        if lg.error_code != "0":
+            logger.error(f"baostock 登录失败: {lg.error_msg}")
+            return market_caps
 
-        bs.login()
         try:
             for symbol in symbols:
-                bs_code = self.engine._to_baostock_code(symbol)
-                rs = bs.query_history_k_data_plus(
-                    bs_code,
-                    "close,volume,turn",
-                    start_date=today_str,
-                    end_date=today_str,
-                    frequency="d",
-                    adjustflag="3",  # 不复权，真实价格
-                )
-                while rs.next():
-                    row = rs.get_row_data()
-                    try:
-                        close = float(row[0])
-                        volume = float(row[1])
-                        turn = float(row[2])
-                        if turn > 0:
-                            circulating_shares = volume / (turn / 100)
-                            market_caps[symbol] = circulating_shares * close
-                    except (ValueError, ZeroDivisionError):
+                try:
+                    bs_code = self.engine._to_baostock_code(symbol)
+                    rs = bs.query_history_k_data_plus(
+                        bs_code,
+                        "close,volume,turn",
+                        start_date=today_str,
+                        end_date=today_str,
+                        frequency="d",
+                        adjustflag="3",  # 不复权，真实价格
+                    )
+
+                    # 检查查询结果
+                    if rs.error_code != "0":
+                        logger.warning(f"[{symbol}] 查询失败: {rs.error_msg}")
                         continue
+
+                    # 检查是否有数据
+                    data_list = []
+                    while rs.next():
+                        data_list.append(rs.get_row_data())
+
+                    if not data_list:
+                        logger.debug(f"[{symbol}] 无数据（可能非交易日）")
+                        continue
+
+                    # 处理数据
+                    for row in data_list:
+                        try:
+                            # 检查空值
+                            if not row[0] or not row[1] or not row[2]:
+                                logger.warning(f"[{symbol}] 数据包含空值，close='{row[0]}', volume='{row[1]}', turn='{row[2]}'，跳过")
+                                continue
+                                
+                            close = float(row[0])
+                            volume = float(row[1])
+                            turn = float(row[2])
+                            
+                            if turn > 0:
+                                circulating_shares = volume / (turn / 100)
+                                market_caps[symbol] = circulating_shares * close
+                        except (ValueError, ZeroDivisionError, IndexError) as e:
+                            logger.warning(f"[{symbol}] 数据处理失败: {e}")
+                            continue
+
+                except Exception as e:
+                    logger.warning(f"[{symbol}] 查询异常: {e}")
+                    continue
+
         finally:
             bs.logout()
 

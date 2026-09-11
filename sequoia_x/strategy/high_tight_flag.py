@@ -21,6 +21,8 @@ class HighTightFlagStrategy(BaseStrategy):
     """
 
     webhook_key: str = "flag"
+    strategy_name: str = "高旗形整理"
+    strategy_descript: str = "\n1.强动量：过去40天区间最高价 / 区间最低价 > 1.6（涨幅超60%） \n2.极度收敛：最近10天区间最高价 / 区间最低价 < 1.15（振幅低于15%） \n3.缩量：今日 volume < 过去20日 volume 均值的 0.6 倍"
     _MIN_BARS: int = 40  # 至少需要 40 根 K 线
 
     def run(self) -> list[str]:

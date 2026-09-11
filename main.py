@@ -77,8 +77,9 @@ def main() -> None:
 
         # 5. 遍历策略，有结果则推送至对应机器人
         for strategy in strategies:
-            strategy_name = type(strategy).__name__
-            logger.info(f"执行策略：{strategy_name}")
+            strategy_name = f"{type(strategy).__name__} {strategy.strategy_name}"
+            strategy_descript = strategy.strategy_descript
+            logger.info(f"执行策略：{strategy_name} {strategy_descript}")
 
             selected: list[str] = strategy.run()
             logger.info(f"{strategy_name} 选出 {len(selected)} 只股票")
@@ -87,6 +88,7 @@ def main() -> None:
                 notifier.send(
                     symbols=selected,
                     strategy_name=strategy_name,
+                    strategy_descript=strategy_descript,
                     webhook_key=strategy.webhook_key,
                 )
             else:

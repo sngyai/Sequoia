@@ -7,6 +7,7 @@ import pandas as pd
 
 from sequoia_x.core.config import Settings
 from sequoia_x.core.logger import get_logger
+import baostock.common.contants as cons
 
 logger = get_logger(__name__)
 
@@ -34,21 +35,35 @@ CREATE INDEX IF NOT EXISTS idx_symbol_date ON stock_daily (symbol, date);
 def _bs_fetch_batch(tasks: list) -> list:
     """多进程 worker：独立 login，批量拉取 baostock 数据。"""
     import baostock as bs
+    import os
     bs.login()
     results = []
+    pid = os.getpid()
     for symbol, bs_code, start, end in tasks:
-        rs = bs.query_history_k_data_plus(
-            bs_code,
-            "date,open,high,low,close,volume,amount",
-            start_date=start,
-            end_date=end,
-            frequency="d",
-            adjustflag="1",  # 后复权
-        )
-        if rs.error_code != "0":
+        try:
+            rs = bs.query_history_k_data_plus(
+                bs_code,
+                "date,open,high,low,close,volume,amount",
+                start_date=start,
+                end_date=end,
+                frequency="d",
+                adjustflag="1",  # 后复权
+            )
+            if rs.error_code != "0":
+                logger.error(f"pid:{pid}拉取 {symbol} 失败：{rs.error_code},{rs.error_msg}")
+                if rs.error_code == cons.BSERR_NO_LOGIN :
+                    bs.login()    #异常登出后，重新登录
+                elif rs.error_code == cons.BSERR_BLACKLIST_USER:
+                    break         #被拉黑，退出循环
+                else:
+                    continue
+            while rs.next():
+                results.append([symbol] + rs.get_row_data())
+                logger.info(f"pid:{pid}拉取 {symbol} 成功")
+        except Exception as e:
+            # 兜底：服务端返回畸形响应（如 IndexError）时记录并跳过
+            logger.error( f"pid: {pid} 拉取 {symbol} 异常： { type(e).__name__} : {e} " )
             continue
-        while rs.next():
-            results.append([symbol] + rs.get_row_data())
     bs.logout()
     return results
 
@@ -125,7 +140,7 @@ class DataEngine:
 
         logger.info(f"需要更新 {len(tasks)} 只股票，启动多进程并行拉取...")
 
-        n_workers = min(8, len(tasks))
+        n_workers = min(6, len(tasks))
         chunks = [tasks[i::n_workers] for i in range(n_workers)]
 
         with Pool(n_workers) as pool:
@@ -147,8 +162,8 @@ class DataEngine:
 
         count = len(df)
         with sqlite3.connect(self.db_path) as conn:
-            for d in df["date"].unique().tolist():
-                conn.execute("DELETE FROM stock_daily WHERE date = ?", (d,))
+            # for d in df["date"].unique().tolist():
+            #     conn.execute("DELETE FROM stock_daily WHERE date = ?", (d,))
             df.to_sql("stock_daily", conn, if_exists="append", index=False, method="multi", chunksize=500)
             conn.commit()
 
@@ -175,7 +190,7 @@ class DataEngine:
         def _login():
             lg = bs.login()
             if lg.error_code != "0":
-                logger.error(f"baostock 登录失败: {lg.error_msg}")
+                logger.error(f"baostock 登录失败: {lg.error_code},{lg.error_msg}")
                 return False
             return True
 
@@ -230,7 +245,7 @@ class DataEngine:
                         )
 
                         if rs.error_code != "0":
-                            raise RuntimeError(rs.error_msg)
+                            raise RuntimeError(f"{rs.error_code},{rs.error_msg}")
 
                         rows = []
                         while rs.next():
